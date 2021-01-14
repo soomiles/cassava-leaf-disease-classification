@@ -1,0 +1,18 @@
+seed: 42
+device_list: [3]
+
+train:
+  n_fold: 5
+  n_fold_iter: 1
+  run_test: False
+
+pl_trainer:
+  max_epochs: 1000
+
+defaults:
+  - dataset: cassava
+  - network: efficientnet-b4
+
+hydra:
+  run:
+    dir: '/workspace/logs/cassava-leaf-disease-classification/${now:%Y-%m-%d}/${now:%H-%M-%S}'

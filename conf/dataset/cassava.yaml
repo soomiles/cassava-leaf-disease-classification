@@ -1,0 +1,20 @@
+# @package _group_
+root_dir: '/workspace/dataset/cassava-leaf-disease-classification'
+img_dir: '${dataset.root_dir}/train_images'
+df_path: '${dataset.root_dir}/train.csv'
+
+num_workers: 8
+
+img_size: 384
+output_label: True
+one_hot_label: False
+do_fmix: False
+fmix_params:
+  alpha: 1.
+  decay_power: 3.
+  shape: (${img_size}, ${img_size})
+  max_soft: True
+  reformulate: False
+do_cutmix: False
+cutmix_params:
+  alpha: 1.
