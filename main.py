@@ -19,11 +19,7 @@ def main(cfg: DictConfig) -> None:
     seed_everything(cfg.seed)
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
 
-    df = pd.read_csv(cfg.dataset.df_path)
-    skf = StratifiedKFold(n_splits=cfg.train.n_fold, shuffle=True)
-    df.loc[:, 'fold'] = 0
-    for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
-        df.loc[df.iloc[val_index].index, 'fold'] = fold_num
+    data = instantiate(cfg.dataset, fold_num=0)
 
 
 if __name__ == "__main__":

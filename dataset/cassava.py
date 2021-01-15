@@ -4,8 +4,10 @@ import pandas as pd
 import cv2
 
 from torch.utils.data import Dataset
-from omegaconf import DictConfig
+from typing import Tuple, List, Optional
+from omegaconf import DictConfig, OmegaConf
 
+from dataset.transforms import get_transforms
 from dataset.fmix import make_low_freq_image, binarise_mask
 
 
@@ -33,24 +35,37 @@ def rand_bbox(size, lam):
 
 
 class CassavaDataset(Dataset):
-    def __init__(self, df: pd.DataFrame,
-                 dataset_conf: DictConfig,
-                 transforms=None,
-                 train=True
+    def __init__(self,
+                 img_dir: str,
+                 df: pd.DataFrame,
+                 train: bool,
+                 img_size: int = None,
+                 output_label: int = None,
+                 one_hot_label: int = None,
+                 do_fmix: int = None,
+                 fmix_params: Optional[DictConfig] = None,
+                 do_cutmix: int = None,
+                 cutmix_params: Optional[DictConfig] = None,
                  ):
 
         super().__init__()
+        self.img_dir = img_dir
         self.df = df.reset_index(drop=True).copy()
-        self.transforms = transforms
-        self.img_dir = dataset_conf.img_dir
-        self.img_size = dataset_conf.img_size
-        self.do_fmix = dataset_conf.do_fmix
-        self.fmix_params = dataset_conf.fmix_params
-        self.do_cutmix = dataset_conf.do_cutmix
-        self.cutmix_params = dataset_conf.cutmix_params
+        self.img_size = img_size
+        self.do_fmix = do_fmix
+        self.fmix_params = fmix_params
+        self.do_cutmix = do_cutmix
+        self.cutmix_params = cutmix_params
 
-        self.output_label = dataset_conf.output_label
-        self.one_hot_label = dataset_conf.one_hot_label
+        if train:
+            self.transforms = get_transforms(need=('train'),
+                                             img_size=self.img_size)['train']
+        else:
+            self.transforms = get_transforms(need=('val'),
+                                             img_size = self.img_size)['val']
+
+        self.output_label = output_label
+        self.one_hot_label = one_hot_label
 
         if self.output_label == True:
             self.labels = self.df['label'].values
