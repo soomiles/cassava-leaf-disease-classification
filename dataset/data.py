@@ -28,6 +28,7 @@ class DataModule(pl.LightningDataModule):
         train_dataloader_conf: Optional[DictConfig] = None,
         val_dataloader_conf: Optional[DictConfig] = None,
         fold_num: int = None,
+        n_fold: int = None,
     ):
         super().__init__()
         self.train_data_dir = train_data_dir
@@ -38,11 +39,12 @@ class DataModule(pl.LightningDataModule):
         self.train_dataloader_conf = train_dataloader_conf or OmegaConf.create()
         self.val_dataloader_conf = val_dataloader_conf or OmegaConf.create()
         self.fold_num = fold_num if fold_num is not None else 0
+        self.n_fold = n_fold if n_fold is not None else 5
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
             df = pd.read_csv(self.df_path)
-            skf = StratifiedKFold(n_splits=5, shuffle=True)
+            skf = StratifiedKFold(n_splits=self.n_fold, shuffle=True)
             df.loc[:, 'fold'] = 0
             for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
                 df.loc[df.iloc[val_index].index, 'fold'] = fold_num

@@ -26,7 +26,7 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
 
     for fold_num in range(cfg.train.n_fold_iter):
-        data = instantiate(cfg.dataset, fold_num=0)
+        data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
 
         tb_logger = TensorBoardLogger(save_dir=os.getcwd(),
                                       version=f'fold{fold_num}')
