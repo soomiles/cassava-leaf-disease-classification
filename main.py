@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 import logging
 from omegaconf import DictConfig, OmegaConf
@@ -28,18 +29,23 @@ def main(cfg: DictConfig) -> None:
     for fold_num in range(cfg.train.n_fold_iter):
         data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
 
-        tb_logger = TensorBoardLogger(save_dir=os.getcwd(),
-                                      version=f'fold{fold_num}')
-        checkpoint_callback = ModelCheckpoint(dirpath=tb_logger.log_dir,
-                                              filename="{epoch:02d}-{valid_score:.4f}",
-                                              monitor='valid_score', mode='max', verbose=False)
-        early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=100, verbose=False)
+        # tb_logger = TensorBoardLogger(save_dir=os.getcwd(),
+        #                               version=f'fold{fold_num}')
+        # checkpoint_callback = ModelCheckpoint(dirpath=tb_logger.log_dir,
+        #                                       filename="{epoch:02d}-{valid_score:.4f}",
+        #                                       monitor='valid_score', mode='max', verbose=False)
+        # early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
+        #                                     patience=100, verbose=False)
         model = LitTrainer(cfg)
-        trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
-                             progress_bar_refresh_rate=1,
-                             logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])
-        trainer.fit(model, data)
+        # trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
+        #                      progress_bar_refresh_rate=1,
+        #                      logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])
+        # trainer.fit(model, data)
+
+        sub = pd.read_csv(cfg.dataset.submit_df_path)
+        # model = LitTrainer.load_from_checkpoint(checkpoint_callback.best_model_path, config=config).eval()
+        infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
+        pred = infer.test(model, datamodule=data)[0]
 
 
 if __name__ == "__main__":

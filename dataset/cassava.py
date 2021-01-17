@@ -50,7 +50,7 @@ class CassavaDataset(Dataset):
 
         super().__init__()
         self.img_dir = img_dir
-        self.df = df.reset_index(drop=True).copy()
+        self.df = df.copy()
         self.img_size = img_size
         self.do_fmix = do_fmix
         self.fmix_params = fmix_params
