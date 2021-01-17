@@ -30,7 +30,6 @@ class DataModule(pl.LightningDataModule):
         fold_num: int = None,
     ):
         super().__init__()
-        self.fold_num = fold_num if fold_num is not None else 0
         self.train_data_dir = train_data_dir
         self.val_data_dir = val_data_dir
         self.df_path = df_path
@@ -38,6 +37,7 @@ class DataModule(pl.LightningDataModule):
         self.val_dataset_conf = val_dataset_conf or OmegaConf.create()
         self.train_dataloader_conf = train_dataloader_conf or OmegaConf.create()
         self.val_dataloader_conf = val_dataloader_conf or OmegaConf.create()
+        self.fold_num = fold_num if fold_num is not None else 0
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
@@ -50,18 +50,18 @@ class DataModule(pl.LightningDataModule):
             train_df = df[df.fold != self.fold_num].reset_index(drop=True)
             val_df = df[df.fold == self.fold_num].reset_index(drop=True)
             self.train = CassavaDataset(self.train_data_dir, train_df, train=True,
-                                        **self.data_conf.train_dataset_conf)
+                                        **self.train_dataset_conf)
             self.val = CassavaDataset(self.val_data_dir, val_df, train=False,
-                                      **self.data_conf.val_dataset_conf)
+                                      **self.val_dataset_conf)
 
         if stage == "test" or stage is None:
             pass
 
     def train_dataloader(self):
-        return DataLoader(self.train, **self.data_conf.train_dataloader_conf)
+        return DataLoader(self.train, **self.train_dataloader_conf)
 
     def val_dataloader(self):
-        return DataLoader(self.val, **self.data_conf.val_dataloader_conf)
+        return DataLoader(self.val, **self.val_dataloader_conf)
 
     def test_dataloader(self):
         return self.val_dataloader

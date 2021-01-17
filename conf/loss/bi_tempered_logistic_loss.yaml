@@ -1,0 +1,4 @@
+# @package _group_
+t1: 0.8
+t2: 1.4
+label_smoothing: 0.2

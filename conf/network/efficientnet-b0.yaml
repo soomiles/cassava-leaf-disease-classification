@@ -1,0 +1,10 @@
+# @package _global_
+optimizer: 'AdamW'
+learning_rate: 3e-4
+batch_size: 30
+
+network:
+  model_name: 'tf_efficientnet_b0_ns'
+  pretrained: True
+  num_classes: 5
+  in_chans: 3

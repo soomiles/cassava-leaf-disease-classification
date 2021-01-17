@@ -1,6 +1,5 @@
 # @package _global_
 root_dir: '/workspace/dataset/cassava-leaf-disease-classification'
-n_fold: 5
 
 dataset:
   _target_: dataset.data.DataModule
@@ -16,7 +15,7 @@ dataset:
     fmix_params:
       alpha: 1.
       decay_power: 3.
-      shape: (${img_size}, ${img_size})
+      shape: (${dataset.train_dataset_conf.img_size}, ${dataset.train_dataset_conf.img_size})
       max_soft: True
       reformulate: False
     do_cutmix: False
@@ -31,7 +30,7 @@ dataset:
     fmix_params:
       alpha: 1.
       decay_power: 3.
-      shape: (${img_size}, ${img_size})
+      shape: (${dataset.val_dataset_conf.img_size}, ${dataset.val_dataset_conf.img_size})
       max_soft: True
       reformulate: False
     do_cutmix: False
@@ -39,11 +38,11 @@ dataset:
       alpha: 1.
 
   train_dataloader_conf:
-    batch_size: 16
+    batch_size: ${batch_size}
     num_workers: 4
 
   val_dataloader_conf:
-    batch_size: 16
+    batch_size: ${batch_size}
     num_workers: 4
 
 

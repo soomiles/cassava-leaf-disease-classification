@@ -1,7 +1,0 @@
-# @package _group_
-backbone: 'timm-efficientnet-b4'
-encoder_weights: 'noisy-student'
-
-optimizer: 'AdamW'
-learning_rate: 3e-4
-batch_size: 40
