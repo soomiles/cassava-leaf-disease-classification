@@ -32,9 +32,9 @@ def main(cfg: DictConfig) -> None:
                                       version=f'fold{fold_num}')
         checkpoint_callback = ModelCheckpoint(dirpath=tb_logger.log_dir,
                                               filename="{epoch:02d}-{valid_score:.4f}",
-                                              monitor='valid_score', mode='max', verbose=True)
+                                              monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=100, verbose=True)
+                                            patience=100, verbose=False)
         model = LitTrainer(cfg)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
