@@ -41,7 +41,7 @@ class LitTrainer(pl.LightningModule):
 
         y_hat = torch.nn.functional.softmax(y_hat, dim=1).argmax(dim=1)
         valid_score = self.evaluator(y, y_hat)
-        self.log('valid_score', valid_score, prog_bar=True)
+        self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         score = torch.nn.functional.softmax(self(batch), dim=1)

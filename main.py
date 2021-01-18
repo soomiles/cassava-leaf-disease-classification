@@ -1,5 +1,6 @@
 import os
 import gc
+from glob import glob
 import numpy as np
 import pandas as pd
 import logging
@@ -26,7 +27,7 @@ def main(cfg: DictConfig) -> None:
     seed_everything(cfg.seed)
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
 
-    scores, ckpt_paths = [], []
+    # Training
     for fold_num in range(cfg.train.n_fold_iter):
         data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
 
@@ -42,25 +43,40 @@ def main(cfg: DictConfig) -> None:
                              progress_bar_refresh_rate=1,
                              logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])
         trainer.fit(model, data)
-        ckpt_paths.append(checkpoint_callback.best_model_path)
-        scores.append(float(checkpoint_callback.best_model_score))
-        logger.info(f'fold {fold_num} - {checkpoint_callback.best_model_score:.4f}')
-    logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
     del data, model, trainer
     gc.collect()
     torch.cuda.empty_cache()
 
-    sub = pd.read_csv(cfg.dataset.submit_df_path)
-    data = instantiate(cfg.dataset)
-    infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
-    preds = []
-    for path in ckpt_paths:
-        model = LitTrainer.load_from_checkpoint(path, train_config=cfg).eval()
-        pred = infer.test(model, datamodule=data)[0]
-        preds.append(pred['prob'])
-    sub['label'] = sub['label'].astype(object)
-    sub['label'] = np.mean(preds, axis=0).tolist()
-    sub.to_csv(os.path.join(os.getcwd(), 'output.csv'), index=False)
+    # Move Checkpoints
+    os.makedirs(os.path.join(os.getcwd(), 'checkpoints'), exist_ok=True)
+    ckpt_paths, scores = [], []
+    for ckpt_path in glob(os.path.join(os.getcwd(), 'default/**/*.ckpt')):
+        if 'tmp_end' in ckpt_path:
+            continue
+        fold = os.path.basename(os.path.dirname(ckpt_path))
+        ckpt_name = os.path.basename(ckpt_path)
+        new_ckpt_path = os.path.join(os.getcwd(), 'checkpoints',
+                                     f'fold{fold}-{ckpt_name}')
+        os.rename(ckpt_path, new_ckpt_path)
+        ckpt_paths.append(new_ckpt_path)
+        fold_score = float(os.path.basename(new_ckpt_path).split('valid_score=')[1][:6])
+        scores.append(fold_score)
+        logger.info(f'Fold {fold} - {fold_score:.4f}')
+    logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
+
+    # Inference
+    if cfg.train.run_test:
+        sub = pd.read_csv(cfg.dataset.submit_df_path)
+        data = instantiate(cfg.dataset)
+        infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
+        preds = []
+        for path in ckpt_paths:
+            model = LitTrainer.load_from_checkpoint(path, train_config=cfg).eval()
+            pred = infer.test(model, datamodule=data)[0]
+            preds.append(pred['prob'])
+        sub['label'] = sub['label'].astype(object)
+        sub['label'] = np.mean(preds, axis=0).tolist()
+        sub.to_csv(os.path.join(os.getcwd(), 'output.csv'), index=False)
 
 if __name__ == "__main__":
     main()

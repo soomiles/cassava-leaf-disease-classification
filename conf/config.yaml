@@ -1,11 +1,11 @@
 seed: 42
-device_list: [0]
+device_list: [3]
 
 train:
   n_fold: 5
-  n_fold_iter: 2
-  n_epochs: 1
-  run_test: True
+  n_fold_iter: 5
+  n_epochs: 1000
+  run_test: False
 
 defaults:
   - dataset: cassava
