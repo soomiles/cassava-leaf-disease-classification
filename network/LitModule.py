@@ -1,12 +1,15 @@
 import torch
 import torch.nn.functional as F
+from torch.optim import *
+from timm.optim import create_optimizer
+from torch.optim.lr_scheduler import *
+from warmup_scheduler import GradualWarmupScheduler
 
 import pytorch_lightning as pl
 from pytorch_lightning.metrics import Accuracy
 import timm
 
-from losses.bi_tempered_logistic_loss import bi_tempered_logistic_loss
-from functools import partial
+from losses import create_loss
 
 
 class LitTrainer(pl.LightningModule):
@@ -15,7 +18,7 @@ class LitTrainer(pl.LightningModule):
         self.save_hyperparameters()
         self.train_config = train_config
         self.model = timm.create_model(**train_config.network)
-        self.criterion = partial(bi_tempered_logistic_loss, **train_config.loss)
+        self.criterion = create_loss(train_config.loss.name, train_config.loss.args)
         self.evaluator = Accuracy()
 
     def forward(self, x):
@@ -57,10 +60,13 @@ class LitTrainer(pl.LightningModule):
         return {'prob': all_outputs}
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.train_config.learning_rate)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
+        optimizer = create_optimizer(self.train_config.optimizer, self)
+        # optimizer = AdamW(self.parameters(), lr=self.train_config.learning_rate)
+        # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1)
+        scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
+        scheduler = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=3,
+                                           after_scheduler=scheduler)
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
-            'monitor': 'valid_score'
         }

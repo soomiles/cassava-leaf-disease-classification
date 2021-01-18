@@ -1,7 +1,5 @@
 # @package _global_
-optimizer: 'AdamW'
-learning_rate: 3e-4
-batch_size: 30
+batch_size: 84
 
 network:
   model_name: 'tf_efficientnet_b0_ns'

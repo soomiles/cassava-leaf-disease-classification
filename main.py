@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
                                               filename="{epoch:02d}-{valid_score:.4f}",
                                               monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=100, verbose=False)
+                                            patience=5, verbose=False)
         model = LitTrainer(cfg)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,

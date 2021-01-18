@@ -1,4 +1,6 @@
 # @package _group_
-t1: 0.8
-t2: 1.4
-label_smoothing: 0.2
+name: bi_tempered_logistic_loss
+args:
+  t1: 0.8
+  t2: 1.4
+  label_smoothing: 0.2
