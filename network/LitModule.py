@@ -1,6 +1,3 @@
-import os
-import numpy as np
-
 import torch
 import torch.nn.functional as F
 
@@ -55,14 +52,9 @@ class LitTrainer(pl.LightningModule):
         return {"pred": out}
 
     def test_epoch_end(self, output_results):
-        df_prob, df_arg = [self.test_dataloader().dataset.df.copy()] * 2
         all_outputs = torch.cat([out["pred"] for out in output_results], dim=0)
         all_outputs = all_outputs.cpu().numpy()
-        df_prob['label'] = all_outputs
-        df_arg['label'] = np.argmax(all_outputs, axis=1)
-        df_prob.to_csv(os.path.join(os.getcwd(), 'prob.csv'), index=False)
-        df_arg.to_csv(os.path.join(os.getcwd(), 'argmax.csv'), index=False)
-        return {'df_prob': df_prob, 'df_arg': df_arg}
+        return {'prob': all_outputs}
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.train_config.learning_rate)

@@ -1,19 +1,11 @@
 import pytorch_lightning as pl
-from hydra.utils import to_absolute_path
 from typing import Tuple, List, Optional
-from omegaconf import DictConfig, OmegaConf
 
-import os
 import pandas as pd
-import logging
 from omegaconf import DictConfig, OmegaConf
-import hydra
-from hydra.utils import instantiate
-from pytorch_lightning.utilities.seed import seed_everything
 
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
-from dataset.transforms import get_transforms
 from dataset.cassava import CassavaDataset
 
 
@@ -51,7 +43,7 @@ class DataModule(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
-            df = pd.read_csv(self.df_path)
+            df = pd.read_csv(self.df_path).iloc[:20]
             skf = StratifiedKFold(n_splits=self.n_fold, shuffle=True)
             df.loc[:, 'fold'] = 0
             for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
