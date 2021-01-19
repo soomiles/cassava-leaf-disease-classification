@@ -12,12 +12,12 @@ dataset:
   train_dataset_conf:
     img_size: 384
     output_label: True
-    one_hot_label: False
+    one_hot_label: True
     do_fmix: False
     fmix_params:
       alpha: 1.
       decay_power: 3.
-      shape: (${dataset.train_dataset_conf.img_size}, ${dataset.train_dataset_conf.img_size})
+      shape: null
       max_soft: True
       reformulate: False
     do_cutmix: False
@@ -27,12 +27,12 @@ dataset:
   val_dataset_conf:
     img_size: 384
     output_label: True
-    one_hot_label: False
+    one_hot_label: True
     do_fmix: False
     fmix_params:
       alpha: 1.
       decay_power: 3.
-      shape: (${dataset.val_dataset_conf.img_size}, ${dataset.val_dataset_conf.img_size})
+      shape: null
       max_soft: True
       reformulate: False
     do_cutmix: False
@@ -47,7 +47,7 @@ dataset:
     fmix_params:
       alpha: 1.
       decay_power: 3.
-      shape: (${dataset.test_dataset_conf.img_size}, ${dataset.test_dataset_conf.img_size})
+      shape: null
       max_soft: True
       reformulate: False
     do_cutmix: False

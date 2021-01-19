@@ -63,6 +63,10 @@ def main(cfg: DictConfig) -> None:
         scores.append(fold_score)
         logger.info(f'Fold {fold} - {fold_score:.4f}')
     logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
+    summary_df = pd.read_csv('/workspace/logs/cassava-leaf-disease-classification/summary.csv')
+    summary_df = summary_df.append(pd.Series(["/".join(os.getcwd().split("/")[-2:]), np.mean(scores)],
+                                             index=['path', 'score']), ignore_index=True)
+    summary_df.to_csv('/workspace/logs/cassava-leaf-disease-classification/summary.csv', index=False)
 
     # Inference
     if cfg.train.run_test:

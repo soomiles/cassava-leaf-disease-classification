@@ -1,0 +1,4 @@
+# @package _group_
+name: label_smoothing_onehot
+args:
+  smoothing: 0.1

@@ -54,6 +54,7 @@ class CassavaDataset(Dataset):
         self.img_size = img_size
         self.do_fmix = do_fmix
         self.fmix_params = fmix_params
+        self.fmix_params.shape = (img_size, img_size)
         self.do_cutmix = do_cutmix
         self.cutmix_params = cutmix_params
 
@@ -101,7 +102,7 @@ class CassavaDataset(Dataset):
                 if self.transforms:
                     fmix_img = self.transforms(image=fmix_img)['image']
 
-                mask_torch = torch.from_numpy(mask)
+                mask_torch = torch.from_numpy(mask).float()
 
                 # mix image
                 img = mask_torch * img + (1. - mask_torch) * fmix_img

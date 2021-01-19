@@ -1,5 +1,5 @@
 seed: 42
-device_list: [0]
+device_list: [1]
 
 train:
   n_fold: 5
@@ -19,7 +19,7 @@ optimizer:
 defaults:
   - dataset: cassava
   - network: efficientnet-b0
-  - loss: bi_tempered_logistic_loss
+  - loss: cross_entropy_onehot
 
 hydra:
   run:
