@@ -56,7 +56,7 @@ def main(cfg: DictConfig) -> None:
         fold = os.path.basename(os.path.dirname(ckpt_path))
         ckpt_name = os.path.basename(ckpt_path)
         new_ckpt_path = os.path.join(os.getcwd(), 'checkpoints',
-                                     f'fold{fold}-{ckpt_name}')
+                                     f'{"-".join(os.getcwd().split("/")[-2:])}-{fold}-{ckpt_name}')
         os.rename(ckpt_path, new_ckpt_path)
         ckpt_paths.append(new_ckpt_path)
         fold_score = float(os.path.basename(new_ckpt_path).split('valid_score=')[1][:6])
