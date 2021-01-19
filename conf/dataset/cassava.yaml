@@ -13,7 +13,7 @@ dataset:
     img_size: 384
     output_label: True
     one_hot_label: True
-    do_fmix: False
+    do_fmix: True
     fmix_params:
       alpha: 1.
       decay_power: 3.

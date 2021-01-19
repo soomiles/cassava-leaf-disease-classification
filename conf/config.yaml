@@ -1,5 +1,5 @@
 seed: 42
-device_list: [1]
+device_list: [0]
 
 train:
   n_fold: 5
