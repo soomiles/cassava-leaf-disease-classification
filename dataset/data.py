@@ -6,6 +6,8 @@ from omegaconf import DictConfig, OmegaConf
 
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
+from catalyst.data.sampler import BalanceClassSampler
+
 from dataset.cassava import CassavaDataset
 
 
@@ -17,6 +19,7 @@ class DataModule(pl.LightningDataModule):
         test_data_dir: str,
         df_path: str,
         submit_df_path: str,
+        balance_clasas_sampler: bool,
         train_dataset_conf: Optional[DictConfig] = None,
         val_dataset_conf: Optional[DictConfig] = None,
         test_dataset_conf: Optional[DictConfig] = None,
@@ -32,6 +35,7 @@ class DataModule(pl.LightningDataModule):
         self.test_data_dir = test_data_dir
         self.df_path = df_path
         self.submit_df_path = submit_df_path
+        self.balance_clasas_sampler = balance_clasas_sampler
         self.train_dataset_conf = train_dataset_conf or OmegaConf.create()
         self.val_dataset_conf = val_dataset_conf or OmegaConf.create()
         self.test_dataset_conf = test_dataset_conf or OmegaConf.create()
@@ -62,7 +66,12 @@ class DataModule(pl.LightningDataModule):
                                        **self.test_dataset_conf)
 
     def train_dataloader(self):
-        return DataLoader(self.train, **self.train_dataloader_conf)
+        if self.balance_clasas_sampler:
+            return DataLoader(self.train,
+                              sampler=BalanceClassSampler(self.train.get_classes(), 'downsampling'),
+                              **self.train_dataloader_conf)
+        else:
+            return DataLoader(self.train, **self.train_dataloader_conf)
 
     def val_dataloader(self):
         return DataLoader(self.val, **self.val_dataloader_conf)

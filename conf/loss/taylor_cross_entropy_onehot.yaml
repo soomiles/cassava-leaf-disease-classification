@@ -1,5 +1,6 @@
 # @package _group_
 name: taylor_cross_entropy_onehot
 args:
+  num_classes: 5
   smoothing: 0.2
   onehot: True

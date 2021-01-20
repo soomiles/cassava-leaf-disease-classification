@@ -8,6 +8,7 @@ dataset:
   test_data_dir: '${root_dir}/test_images'
   df_path: '${root_dir}/train.csv'
   submit_df_path: '${root_dir}/sample_submission.csv'
+  balance_clasas_sampler: True
 
   train_dataset_conf:
     img_size: 384

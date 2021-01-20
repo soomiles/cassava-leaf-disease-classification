@@ -74,6 +74,9 @@ class CassavaDataset(Dataset):
             if self.one_hot_label is True:
                 self.labels = np.eye(self.df['label'].max() + 1)[self.labels]
 
+    def get_classes(self):
+        return self.df['label'].values
+
     def __len__(self):
         return self.df.shape[0]
 

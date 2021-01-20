@@ -1,0 +1,8 @@
+# @package _global_
+batch_size: 30
+
+network:
+  model_name: 'resnext50_32x4d'
+  pretrained: True
+  num_classes: 5
+  in_chans: 3

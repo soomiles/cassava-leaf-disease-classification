@@ -1,0 +1,8 @@
+# @package _global_
+batch_size: 20
+
+network:
+  model_name: 'rexnet_150'
+  pretrained: True
+  num_classes: 5
+  in_chans: 3
