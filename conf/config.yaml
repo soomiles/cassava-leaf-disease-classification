@@ -4,9 +4,14 @@ device_list: [1]
 train:
   n_fold: 5
   n_fold_iter: 5
-  n_epochs: 15
+  n_epochs: 20
   step_size: 2
   total_epoch: 3
+  do_noise: True
+  noise_params:
+    alpha: 0.2
+    period_epoch: 2
+    thr_epochs: 8
   run_test: False
 
 optimizer:
@@ -20,9 +25,12 @@ optimizer:
 
 defaults:
   - dataset: base
-  - network: efficientnet-b0
-  - loss: label_smoothing_onehot
+  - network: efficientnet-b4
+  - loss: noise_label_smoothing_onehot
 
 hydra:
   run:
     dir: '/workspace/logs/cassava-leaf-disease-classification/${now:%Y-%m-%d}/${now:%H-%M-%S}'
+  sweep:
+    dir: '/workspace/logs/cassava-leaf-disease-classification/${now:%Y-%m-%d}/${now:%H-%M-%S}'
+    subdir: ${hydra.job.num}

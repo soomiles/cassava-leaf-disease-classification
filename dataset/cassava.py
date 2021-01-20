@@ -75,6 +75,7 @@ class CassavaDataset(Dataset):
 
             if self.one_hot_label is True:
                 self.labels = np.eye(5)[self.labels]
+        self.labels_copy = self.labels.copy()
 
     def get_classes(self):
         return self.df['label'].values

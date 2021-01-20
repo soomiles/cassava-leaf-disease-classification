@@ -44,6 +44,30 @@ class LabelSmoothingOneHot(nn.Module):
             return loss
 
 
+class NoiseLabelSmoothingOneHot(nn.Module):
+    def __init__(self, smoothing=0.1, average='mean', log_softmax=True):
+        super(NoiseLabelSmoothingOneHot, self).__init__()
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.average = average
+        self.log_softmax = log_softmax
+
+    def forward(self, x, target):
+        x = x.float()
+        target = target.float()
+        weights, _ = target.max(dim=1)
+        if self.log_softmax: x = x.log_softmax(dim=-1)
+        nll_loss = -x * target
+        nll_loss = nll_loss.sum(-1)
+        smooth_loss = -x.mean(dim=-1)
+        loss = self.confidence * nll_loss + self.smoothing * smooth_loss
+        loss = weights * loss
+        if self.average == 'mean':
+            return loss.mean()
+        else:
+            return loss
+
+
 class CrossEntropyOneHot(nn.Module):
     def __init__(self):
         super(CrossEntropyOneHot, self).__init__()
@@ -51,6 +75,17 @@ class CrossEntropyOneHot(nn.Module):
     def forward(self, x, target):
         labels = target.argmax(dim=1)
         return nn.CrossEntropyLoss()(x, labels)
+
+
+class NoiseCrossEntropyOneHot(nn.Module):
+    def __init__(self):
+        super(NoiseCrossEntropyOneHot, self).__init__()
+
+    def forward(self, x, target):
+        weights, labels = target.max(dim=1)
+        loss = nn.CrossEntropyLoss(reduction='none')(x, labels)
+        loss = (weights * loss).mean()
+        return loss
 
 
 class F1_Loss(nn.Module):

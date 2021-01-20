@@ -10,7 +10,7 @@ dataset:
   submit_df_path: '${root_dir}/sample_submission.csv'
 
   train_dataset_conf:
-    img_size: (288, 384)
+    img_size: (480, 640) # (288, 384)
     output_label: True
     one_hot_label: True
     do_fmix: False
@@ -25,7 +25,7 @@ dataset:
       alpha: 1.
 
   val_dataset_conf:
-    img_size: (288, 384)
+    img_size: (480, 640) # (288, 384)
     output_label: True
     one_hot_label: True
     do_fmix: False
@@ -40,7 +40,7 @@ dataset:
       alpha: 1.
 
   test_dataset_conf:
-    img_size: (288, 384)
+    img_size: (480, 640) # (288, 384)
     output_label: False
     one_hot_label: False
     do_fmix: False

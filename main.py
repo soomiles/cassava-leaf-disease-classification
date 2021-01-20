@@ -37,12 +37,20 @@ def main(cfg: DictConfig) -> None:
                                               filename="{epoch:02d}-{valid_score:.4f}",
                                               monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=5, verbose=False)
+                                            patience=20, verbose=False)
         model = LitTrainer(cfg)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
                              logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])
         trainer.fit(model, data)
+
+        if cfg.train.do_noise:
+            pd.DataFrame({'image_id': data.train.df.image_id.values,
+                          'labels': data.train.labels_copy.tolist()}).to_csv(
+                os.path.join(os.getcwd(), f'fold{fold_num}_train_labels.csv'), index=False)
+            pd.DataFrame({'image_id': data.val.df.image_id.values,
+                          'labels': data.val.labels_copy.tolist()}).to_csv(
+                os.path.join(os.getcwd(), f'fold{fold_num}_val_labels.csv'), index=False)
     del data, model, trainer
     gc.collect()
     torch.cuda.empty_cache()

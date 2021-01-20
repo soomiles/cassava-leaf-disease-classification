@@ -4,11 +4,15 @@ from torch.optim import *
 from timm.optim import create_optimizer
 from torch.optim.lr_scheduler import *
 from warmup_scheduler import GradualWarmupScheduler
+from ast import literal_eval
 
 import pytorch_lightning as pl
+from pytorch_lightning.core.decorators import auto_move_data
 from pytorch_lightning.metrics import Accuracy
 import timm
+from torch.utils.data import DataLoader
 
+from dataset.transforms import get_transforms
 from losses import create_loss
 
 
@@ -21,6 +25,7 @@ class LitTrainer(pl.LightningModule):
         self.criterion = create_loss(train_config.loss.name, train_config.loss.args)
         self.evaluator = Accuracy()
 
+    @auto_move_data
     def forward(self, x):
         x = self.model(x)
         return x
@@ -45,6 +50,33 @@ class LitTrainer(pl.LightningModule):
         y_hat = torch.nn.functional.softmax(y_hat, dim=1).argmax(dim=1)
         valid_score = self.evaluator(y, y_hat)
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
+
+    def validation_epoch_end(self, outputs):
+        if self.train_config.train.do_noise and \
+                (self.current_epoch + 1) % self.train_config.train.noise_params.period_epoch == 0:
+            self.ensemble_prediction()
+
+    def ensemble_prediction(self):
+        transforms = get_transforms(img_size=(self.val_dataloader().dataset.h,
+                                              self.val_dataloader().dataset.w))
+        batch_size = self.train_config.batch_size
+
+        self.train_dataloader().dataset.transforms = transforms['val']
+        for ds in [self.train_dataloader().dataset, self.val_dataloader().dataset]:
+            dl = DataLoader(ds, **self.train_config.dataset.val_dataloader_conf)
+            for index, batch in enumerate(dl):
+                dl_idx = index * batch_size
+                x, y = batch
+                with torch.no_grad():
+                    x = torch.nn.functional.softmax(self(x), dim=1).cpu()
+                ds.labels_copy[dl_idx: dl_idx+batch_size] = \
+                    self.train_config.train.noise_params.alpha * x + \
+                    (1 - self.train_config.train.noise_params.alpha) * ds.labels_copy[dl_idx: dl_idx+batch_size]
+        self.train_dataloader().dataset.transforms = transforms['train']
+
+        if self.current_epoch >= self.train_config.train.noise_params.thr_epochs:
+            self.train_dataloader().dataset.labels = self.train_dataloader().dataset.labels_copy.copy()
+            # self.val_dataloader().dataset.labels = self.val_dataloader().dataset.labels_copy.copy()
 
     def test_step(self, batch, batch_idx):
         score = torch.nn.functional.softmax(self(batch), dim=1)
