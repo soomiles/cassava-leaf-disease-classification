@@ -6,6 +6,7 @@ import cv2
 from torch.utils.data import Dataset
 from typing import Tuple, List, Optional
 from omegaconf import DictConfig, OmegaConf
+from ast import literal_eval
 
 from dataset.transforms import get_transforms
 from dataset.fmix import make_low_freq_image, binarise_mask
@@ -39,7 +40,7 @@ class CassavaDataset(Dataset):
                  img_dir: str,
                  df: pd.DataFrame,
                  train: bool,
-                 img_size: int = None,
+                 img_size: str = None,
                  output_label: int = None,
                  one_hot_label: int = None,
                  do_fmix: int = None,
@@ -51,19 +52,20 @@ class CassavaDataset(Dataset):
         super().__init__()
         self.img_dir = img_dir
         self.df = df.copy()
-        self.img_size = img_size
+        img_size = literal_eval(img_size)
+        self.h, self.w = img_size
         self.do_fmix = do_fmix
         self.fmix_params = fmix_params
-        self.fmix_params.shape = (img_size, img_size)
+        self.fmix_params.shape = img_size
         self.do_cutmix = do_cutmix
         self.cutmix_params = cutmix_params
 
         if train:
             self.transforms = get_transforms(need=('train'),
-                                             img_size=self.img_size)['train']
+                                             img_size=img_size)['train']
         else:
             self.transforms = get_transforms(need=('val'),
-                                             img_size = self.img_size)['val']
+                                             img_size=img_size, crop=True)['val']
 
         self.output_label = output_label
         self.one_hot_label = one_hot_label
@@ -72,7 +74,7 @@ class CassavaDataset(Dataset):
             self.labels = self.df['label'].values
 
             if self.one_hot_label is True:
-                self.labels = np.eye(self.df['label'].max() + 1)[self.labels]
+                self.labels = np.eye(5)[self.labels]
 
     def get_classes(self):
         return self.df['label'].values
@@ -110,7 +112,7 @@ class CassavaDataset(Dataset):
                 # mix image
                 img = mask_torch * img + (1. - mask_torch) * fmix_img
 
-                rate = mask.sum() / self.img_size / self.img_size
+                rate = mask.sum() / self.h / self.w
                 target = rate * target + (1. - rate) * self.labels[fmix_ix]
 
         if self.do_cutmix and np.random.uniform(0., 1., size=1)[0] > 0.5:
@@ -121,11 +123,11 @@ class CassavaDataset(Dataset):
                     cmix_img = self.transforms(image=cmix_img)['image']
 
                 lam = np.clip(np.random.beta(self.cutmix_params['alpha'], self.cutmix_params['alpha']), 0.3, 0.4)
-                bbx1, bby1, bbx2, bby2 = rand_bbox((self.img_size, self.img_size), lam)
+                bbx1, bby1, bbx2, bby2 = rand_bbox((self.h, self.w), lam)
 
                 img[:, bbx1:bbx2, bby1:bby2] = cmix_img[:, bbx1:bbx2, bby1:bby2]
 
-                rate = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (self.img_size * self.img_size))
+                rate = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (self.h * self.w))
                 target = rate * target + (1. - rate) * self.labels[cmix_ix]
 
         if self.output_label == True:
