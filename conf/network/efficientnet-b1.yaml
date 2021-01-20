@@ -1,8 +1,8 @@
 # @package _global_
-batch_size: 16
+batch_size: 12
 
 network:
-  model_name: 'tf_efficientnet_b0_ns'
+  model_name: 'tf_efficientnet_b1_ns'
   pretrained: True
   num_classes: 5
   in_chans: 3

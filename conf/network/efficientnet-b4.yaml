@@ -2,7 +2,7 @@
 batch_size: 16
 
 network:
-  model_name: 'tf_efficientnet_b0_ns'
+  model_name: 'tf_efficientnet_b4_ns'
   pretrained: True
   num_classes: 5
   in_chans: 3
