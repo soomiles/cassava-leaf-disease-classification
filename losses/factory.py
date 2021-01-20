@@ -2,20 +2,41 @@ import torch
 import torch.nn as nn
 
 
-class LabelSmoothing(nn.Module):
-    def __init__(self, smoothing=0.1, average='mean'):
-        super(LabelSmoothing, self).__init__()
+class LabelSmoothingLoss(nn.Module):
+
+    def __init__(self, classes, smoothing=0.0, dim=-1, log_softmax=True):
+        super(LabelSmoothingLoss, self).__init__()
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.cls = classes
+        self.dim = dim
+        self.log_softmax = log_softmax
+
+    def forward(self, pred, target):
+        """Taylor Softmax and log are already applied on the logits"""
+        if self.log_softmax: pred = pred.log_softmax(dim=self.dim)
+        with torch.no_grad():
+            true_dist = torch.zeros_like(pred)
+            true_dist.fill_(self.smoothing / (self.cls - 1))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+        return torch.mean(torch.sum(-true_dist * pred, dim=self.dim))
+
+
+class LabelSmoothingOneHot(nn.Module):
+    def __init__(self, smoothing=0.1, average='mean', log_softmax=True):
+        super(LabelSmoothingOneHot, self).__init__()
         self.confidence = 1.0 - smoothing
         self.smoothing = smoothing
         self.average = average
+        self.log_softmax = log_softmax
 
     def forward(self, x, target):
         x = x.float()
         target = target.float()
-        logprobs = torch.nn.functional.log_softmax(x, dim = -1)
-        nll_loss = -logprobs * target
+        if self.log_softmax: x = x.log_softmax(dim=-1)
+        nll_loss = -x * target
         nll_loss = nll_loss.sum(-1)
-        smooth_loss = -logprobs.mean(dim=-1)
+        smooth_loss = -x.mean(dim=-1)
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         if self.average == 'mean':
             return loss.mean()
