@@ -63,8 +63,9 @@ class LitTrainer(pl.LightningModule):
         optimizer = create_optimizer(self.train_config.optimizer, self)
         # optimizer = AdamW(self.parameters(), lr=self.train_config.learning_rate)
         # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1)
-        scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
-        scheduler = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=3,
+        scheduler = StepLR(optimizer, step_size=self.train_config.train.step_size, gamma=0.5)
+        scheduler = GradualWarmupScheduler(optimizer, multiplier=1,
+                                           total_epoch=self.train_config.train.total_epoch,
                                            after_scheduler=scheduler)
         return {
             'optimizer': optimizer,
