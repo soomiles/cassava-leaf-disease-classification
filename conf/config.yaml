@@ -1,12 +1,12 @@
 seed: 42
-device_list: [3]
+device_list: [0]
 
 train:
   n_fold: 5
   n_fold_iter: 5
-  n_epochs: 45
-  step_size: 6
-  total_epoch: 9
+  n_epochs: 15
+  step_size: 2
+  total_epoch: 3
   run_test: False
 
 optimizer:

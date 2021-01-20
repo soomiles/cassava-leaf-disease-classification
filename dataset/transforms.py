@@ -22,7 +22,6 @@ def get_transforms(need=('train', 'val'), img_size=384):
         ], p=1.0)
     if 'val' in need:
         transformations['val'] = Compose([
-            CenterCrop(img_size, img_size, p=1.),
             Resize(img_size, img_size),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], max_pixel_value=255.0, p=1.0),
             ToTensorV2(p=1.0),

@@ -1,5 +1,5 @@
 # @package _global_
-batch_size: 30
+batch_size: 60
 
 network:
   model_name: 'tf_efficientnet_b0_ns'
