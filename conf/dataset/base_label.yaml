@@ -6,13 +6,13 @@ dataset:
   train_data_dir: '${root_dir}/train_images'
   val_data_dir: '${root_dir}/train_images'
   test_data_dir: '${root_dir}/test_images'
-  df_path: '${root_dir}/csv/train_pred_v1.csv'
+  df_path: '${root_dir}/csv/train_label_v1.csv'
   submit_df_path: '${root_dir}/sample_submission.csv'
 
   train_dataset_conf:
-    img_size: (288, 384)
+    img_size: (288, 384) # (288, 384) or (480, 640)
     output_label: True
-    one_hot_label: False
+    one_hot_label: True
     do_fmix: False
     fmix_params:
       alpha: 1.
@@ -27,7 +27,7 @@ dataset:
   val_dataset_conf:
     img_size: (288, 384)
     output_label: True
-    one_hot_label: False
+    one_hot_label: True
     do_fmix: False
     fmix_params:
       alpha: 1.

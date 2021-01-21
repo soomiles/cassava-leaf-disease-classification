@@ -46,10 +46,11 @@ class DataModule(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
             df = pd.read_csv(self.df_path)
-            skf = StratifiedKFold(n_splits=self.n_fold, shuffle=True)
-            df.loc[:, 'fold'] = 0
-            for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
-                df.loc[df.iloc[val_index].index, 'fold'] = fold_num
+            if 'fold' not in df.columns:
+                skf = StratifiedKFold(n_splits=self.n_fold, shuffle=True)
+                df.loc[:, 'fold'] = 0
+                for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
+                    df.loc[df.iloc[val_index].index, 'fold'] = fold_num
 
             train_df = df[df.fold != self.fold_num].reset_index(drop=True)
             val_df = df[df.fold == self.fold_num].reset_index(drop=True)

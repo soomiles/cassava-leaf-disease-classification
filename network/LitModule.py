@@ -36,8 +36,9 @@ class LitTrainer(pl.LightningModule):
         train_loss = self.criterion(y_hat, y)
         self.log('train_loss', train_loss)
 
-        y_hat = torch.nn.functional.softmax(y_hat, dim=1).argmax(dim=1)
-        train_score = self.evaluator(y, y_hat)
+        y = y.argmax(dim=1) if len(y.shape) > 1 else y
+        y_hat = y_hat.argmax(dim=1)
+        train_score = self.evaluator(y_hat, y)
         self.log('train_score', train_score)
         return train_loss
 
@@ -47,8 +48,9 @@ class LitTrainer(pl.LightningModule):
         valid_loss = self.criterion(y_hat, y)
         self.log('valid_loss', valid_loss)
 
-        y_hat = torch.nn.functional.softmax(y_hat, dim=1).argmax(dim=1)
-        valid_score = self.evaluator(y, y_hat)
+        y = y.argmax(dim=1) if len(y.shape) > 1 else y
+        y_hat = y_hat.argmax(dim=1)
+        valid_score = self.evaluator(y_hat, y)
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
     def validation_epoch_end(self, outputs):

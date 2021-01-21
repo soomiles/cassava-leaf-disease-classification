@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
                                               filename="{epoch:02d}-{valid_score:.4f}",
                                               monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=20, verbose=False)
+                                            patience=cfg.train.n_epochs//5, verbose=False)
         model = LitTrainer(cfg)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
@@ -71,10 +71,14 @@ def main(cfg: DictConfig) -> None:
         scores.append(fold_score)
         logger.info(f'Fold {fold} - {fold_score:.4f}')
     logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
-    summary_df = pd.read_csv('/workspace/logs/cassava-leaf-disease-classification/summary.csv')
-    summary_df = summary_df.append(pd.Series(["/".join(os.getcwd().split("/")[-3:]), np.mean(scores)],
-                                             index=['path', 'score']), ignore_index=True)
-    summary_df.to_csv('/workspace/logs/cassava-leaf-disease-classification/summary.csv', index=False)
+    summary_df = pd.read_csv('/workspace/logs/cassava-leaf-disease-classification/summary_v1.csv')
+    summary_df = summary_df.append(pd.Series([os.path.basename(cfg.dataset.df_path)[:-4],
+                                              "/".join(os.getcwd().split("/")[-3:]),
+                                              np.mean(scores)] + scores,
+                                             index=['cv', 'path', 'score'] +
+                                                   [f'fold{i}' for i in range(len(scores))]),
+                                   ignore_index=True)
+    summary_df.to_csv('/workspace/logs/cassava-leaf-disease-classification/summary_v1.csv', index=False)
 
     # Inference
     if cfg.train.run_test:

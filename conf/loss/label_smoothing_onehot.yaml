@@ -1,5 +1,5 @@
 # @package _group_
 name: label_smoothing_onehot
 args:
-  smoothing: 0.2
+  smoothing: 0.3
   log_softmax: True

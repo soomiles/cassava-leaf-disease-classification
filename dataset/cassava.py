@@ -74,7 +74,10 @@ class CassavaDataset(Dataset):
             self.labels = self.df['label'].values
 
             if self.one_hot_label is True:
-                self.labels = np.eye(5)[self.labels]
+                if not isinstance(self.labels[0], str):
+                    self.labels = np.eye(5)[self.labels]
+                else:
+                    self.labels = np.array([literal_eval(elem) for elem in self.labels])
         self.labels_copy = self.labels.copy()
 
     def get_classes(self):
