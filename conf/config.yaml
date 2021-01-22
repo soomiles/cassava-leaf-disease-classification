@@ -1,15 +1,15 @@
 seed: 42
-device_list: [3]
+device_list: [2]
 
 train:
   n_fold: 5
   n_fold_iter: 5
   n_epochs: 15
   total_epoch: 2
-  do_noise: False
+  do_noise: True
   noise_params:
     alpha: 0.2
-    period_epoch: 3
+    period_epoch: 2
     thr_epochs: 8
   run_test: False
 
@@ -23,8 +23,8 @@ optimizer:
   weight_decay: 1e-5
 
 defaults:
-  - dataset: base
-  - network: efficientnet-b0
+  - dataset: merged_480
+  - network: resnest50d_1s4x24d
   - loss: label_smoothing_onehot
 
 hydra:
