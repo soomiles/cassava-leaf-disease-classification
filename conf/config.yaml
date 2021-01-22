@@ -4,9 +4,9 @@ device_list: [3]
 train:
   n_fold: 5
   n_fold_iter: 5
-  n_epochs: 20
+  n_epochs: 15
   total_epoch: 2
-  do_noise: True
+  do_noise: False
   noise_params:
     alpha: 0.2
     period_epoch: 3
@@ -23,8 +23,8 @@ optimizer:
   weight_decay: 1e-5
 
 defaults:
-  - dataset: merged_480
-  - network: efficientnet-b4
+  - dataset: base
+  - network: efficientnet-b0
   - loss: label_smoothing_onehot
 
 hydra:

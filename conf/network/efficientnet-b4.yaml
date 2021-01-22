@@ -1,8 +1,8 @@
 # @package _global_
 #batch_size: 18 # (288, 384) 11GB
 
-#batch_size: 46 # (288, 384) 24GB
-batch_size: 16 # (480, 640) 24GB
+batch_size: 46 # (288, 384) 24GB
+#batch_size: 16 # (480, 640) 24GB
 
 network:
   model_name: 'tf_efficientnet_b4_ns'
