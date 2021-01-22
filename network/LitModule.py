@@ -70,10 +70,12 @@ class LitTrainer(pl.LightningModule):
                 dl_idx = index * batch_size
                 x, y = batch
                 with torch.no_grad():
-                    x = torch.nn.functional.softmax(self(x), dim=1).cpu()
-                ds.labels_copy[dl_idx: dl_idx+batch_size] = \
-                    self.train_config.train.noise_params.alpha * x + \
-                    (1 - self.train_config.train.noise_params.alpha) * ds.labels_copy[dl_idx: dl_idx+batch_size]
+                    y_hat = torch.nn.functional.softmax(self(x), dim=1).cpu()
+                y_hat = torch.nn.functional.softmax(
+                    self.train_config.train.noise_params.alpha * y_hat + torch.from_numpy(
+                        (1 - self.train_config.train.noise_params.alpha) * ds.labels_copy[dl_idx: dl_idx + batch_size]),
+                    dim=1)
+                ds.labels_copy[dl_idx: dl_idx+batch_size] = y_hat.numpy()
         self.train_dataloader().dataset.transforms = transforms['train']
 
         if self.current_epoch >= self.train_config.train.noise_params.thr_epochs:

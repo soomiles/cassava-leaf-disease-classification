@@ -1,16 +1,16 @@
 # @package _global_
-root_dir: '/workspace/dataset/cassava-leaf-disease-classification'
+root_dir: '/workspace/dataset/cassava-leaf-disease-classification-merged'
 
 dataset:
   _target_: dataset.data.DataModule
-  train_data_dir: '${root_dir}/train_images'
-  val_data_dir: '${root_dir}/train_images'
-  test_data_dir: '${root_dir}/test_images'
-  df_path: '${root_dir}/csv/train_label_v1.csv'
-  submit_df_path: '${root_dir}/sample_submission.csv'
+  train_data_dir: '${root_dir}/train'
+  val_data_dir: '${root_dir}/train'
+  test_data_dir: '/workspace/dataset/cassava-leaf-disease-classification/test_images'
+  df_path: '${root_dir}/csv/train.csv'
+  submit_df_path: '/workspace/dataset/cassava-leaf-disease-classification/sample_submission.csv'
 
   train_dataset_conf:
-    img_size: (288, 384)
+    img_size: (480, 640) # (288, 384) or (480, 640)
     output_label: True
     one_hot_label: True
     do_fmix: False
@@ -20,12 +20,12 @@ dataset:
       shape: null
       max_soft: True
       reformulate: False
-    do_cutmix: True
+    do_cutmix: False
     cutmix_params:
       alpha: 1.
 
   val_dataset_conf:
-    img_size: (288, 384)
+    img_size: (480, 640)
     output_label: True
     one_hot_label: True
     do_fmix: False
