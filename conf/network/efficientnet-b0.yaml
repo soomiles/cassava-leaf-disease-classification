@@ -2,6 +2,8 @@
 batch_size: 48 # (288, 384) 11GB
 #batch_size: 16 # (480, 640) 11GB
 
+#batch_size: 112 # (288, 384) 24GB
+
 network:
   model_name: 'tf_efficientnet_b0_ns'
   pretrained: True
