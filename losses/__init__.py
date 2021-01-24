@@ -1,5 +1,6 @@
 import torch.nn as nn
-from losses.bi_tempered_logistic_loss import bi_tempered_logistic_loss
+from losses.bi_tempered_logistic_loss import bi_tempered_logistic_loss,\
+    noise_bi_tempered_logistic_loss
 from losses.factory import CrossEntropyOneHot, LabelSmoothingOneHot,\
     F1_Loss, NoiseCrossEntropyOneHot, NoiseLabelSmoothingOneHot
 from losses.taylor_cross_entropy import TaylorCrossEntropyLoss
@@ -20,6 +21,8 @@ def create_loss(name: str,
         return NoiseCrossEntropyOneHot()
     elif name == 'noise_label_smoothing_onehot':
         return NoiseLabelSmoothingOneHot()
+    elif name == 'noise_bi_tempered_logistic_loss':
+        return partial(noise_bi_tempered_logistic_loss, **loss_conf)
     elif name == 'label_smoothing_onehot':
         return LabelSmoothingOneHot(**loss_conf)
     elif name == 'f1_loss_onehot':

@@ -107,3 +107,15 @@ class LitTrainer(pl.LightningModule):
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
         }
+
+
+class DistilledTrainer(LitTrainer):
+    def __init__(self, train_config):
+        super().__init__(train_config)
+        train_config.network.num_classes = 10
+        self.model = timm.create_model(**train_config.network)
+        self._teacher_loss = create_loss(train_config.loss.name, train_config.loss.args)
+        self._teacher_model = timm.create_model(**train_config.network)
+        self._teacher_model.load()
+        for param in self._teacher_model.parameters():
+            param.requires_grad = False

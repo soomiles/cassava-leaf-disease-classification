@@ -3,8 +3,9 @@
 #batch_size: 12 # (480, 640) 11GB
 
 #batch_size: 80 # (288, 384) 24GB
+batch_size: 60 # (384, 384) 24GB
 #batch_size: 30 # (480, 640) 24GB
-batch_size: 20 # (576, 768) 24GB
+#batch_size: 20 # (576, 768) 24GB
 
 network:
   model_name: 'tf_efficientnet_b1_ns'

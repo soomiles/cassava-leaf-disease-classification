@@ -239,3 +239,21 @@ def bi_tempered_logistic_loss(activations,
         return loss_values.sum()
     if reduction == 'mean':
         return loss_values.mean()
+
+
+def noise_bi_tempered_logistic_loss(activations,
+                                    labels,
+                                    t1,
+                                    t2,
+                                    label_smoothing=0.0,
+                                    num_iters=5,
+                                    reduction='mean'):
+    weights, _ = labels.max(dim=1)
+    loss = bi_tempered_logistic_loss(activations, labels,
+                                    t1, t2,
+                                    label_smoothing, num_iters,
+                                    reduction='none')
+    if reduction == 'mean':
+        return loss.mean()
+    else:
+        return loss
