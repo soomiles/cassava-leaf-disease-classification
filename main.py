@@ -36,10 +36,12 @@ def main(cfg: DictConfig) -> None:
         checkpoint_callback = ModelCheckpoint(dirpath=tb_logger.log_dir,
                                               filename="{epoch:02d}-{valid_score:.4f}",
                                               monitor='valid_score', mode='max', verbose=False)
-        early_stop_callback = EarlyStopping(monitor='valid_score', mode='man_fold_iterx',
+        early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
                                             patience=cfg.train.n_epochs//5, verbose=False)
         if cfg.train.do_distillation:
-            model = DistilledTrainer(cfg, teacher_dir=cfg.train.distillation_params.dir)
+            model = DistilledTrainer(cfg,
+                                     teacher_dir=cfg.train.distillation_params.dir,
+                                     fold_num=fold_num)
         else:
             model = LitTrainer(cfg)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
