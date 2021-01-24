@@ -131,7 +131,7 @@ class DistilledTrainer(LitTrainer):
     def training_step(self, batch, batch_idx):
         x, y = batch
         with torch.no_grad():
-            y_teacher = self._teacher_model(x)
+            y_teacher = F.softmax(self._teacher_model(x), dim=-1)
         y_hat1, y_hat2 = self(x)
         train_loss1 = self.criterion(y_hat1, y)
         train_loss2 = self.teacher_criterion(y_hat2, y_teacher)

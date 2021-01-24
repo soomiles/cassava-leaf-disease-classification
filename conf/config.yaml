@@ -11,7 +11,7 @@ train:
     alpha: 0.15
     period_epoch: 2
     thr_epochs: 8
-  do_distillation: False
+  do_distillation: True
   distillation_params:
     dir: '/workspace/logs/cassava-leaf-disease-classification/2021-01-24/15-56-21'
     loss:
