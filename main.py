@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.utilities.seed import seed_everything
-from network.LitModule import LitTrainer
+from network.LitModule import LitTrainer, DistilledTrainer
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -38,7 +38,10 @@ def main(cfg: DictConfig) -> None:
                                               monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='man_fold_iterx',
                                             patience=cfg.train.n_epochs//5, verbose=False)
-        model = LitTrainer(cfg)
+        if cfg.train.do_distillation:
+            model = DistilledTrainer(cfg, teacher_dir=cfg.train.distillation_params.dir)
+        else:
+            model = LitTrainer(cfg)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
                              logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])

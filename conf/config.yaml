@@ -1,5 +1,5 @@
 seed: 42
-device_list: [0]
+device_list: [0, 1, 2, 3]
 
 train:
   n_fold: 5
@@ -12,7 +12,11 @@ train:
     period_epoch: 2
     thr_epochs: 8
   do_distillation: False
-
+  distillation_params:
+    dir: null
+    loss:
+      name: cross_entropy_onehot
+      args: null
   run_test: False
 
 defaults:
