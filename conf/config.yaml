@@ -1,19 +1,19 @@
 seed: 42
-device_list: [0, 1, 2, 3]
+device_list: [0, 1]
 
 train:
   n_fold: 5
-  n_fold_iter: 1
-  n_epochs: 30
+  n_fold_iter: 5
+  n_epochs: 15
   total_epoch: 2
   do_noise: False
   noise_params:
     alpha: 0.15
     period_epoch: 2
     thr_epochs: 8
-  do_distillation: True
+  do_distillation: False
   distillation_params:
-    dir: '/workspace/logs/cassava-leaf-disease-classification/2021-01-24/15-56-21'
+    dir: '/workspace/logs/cassava-leaf-disease-classification/2021-01-24/15-56-21' # 17-42-03: 5 fold eff-b0
     loss:
       name: label_smoothing_onehot
       args:
