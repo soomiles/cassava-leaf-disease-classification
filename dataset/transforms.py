@@ -23,6 +23,7 @@ def get_transforms(need=('train', 'val'), img_size=(384, 384), crop=True):
     if 'val' in need:
         new_size = tuple([int((256 / 224) * size) for size in img_size]) if crop else img_size
         transformations['val'] = Compose([
+            PadIfNeeded(min_height=512, min_width=512),
             CenterCrop(img_size[0], img_size[1]),
             Resize(new_size[0], new_size[1]),
             CenterCrop(img_size[0], img_size[1]),
