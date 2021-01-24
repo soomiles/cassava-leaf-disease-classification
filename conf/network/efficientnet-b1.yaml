@@ -1,9 +1,10 @@
 # @package _global_
 #batch_size: 32 # (288, 384) 11GB
+batch_size: 24 # (384, 384) 11GB
 #batch_size: 12 # (480, 640) 11GB
 
 #batch_size: 80 # (288, 384) 24GB
-batch_size: 60 # (384, 384) 24GB
+#batch_size: 60 # (384, 384) 24GB
 #batch_size: 30 # (480, 640) 24GB
 #batch_size: 20 # (576, 768) 24GB
 

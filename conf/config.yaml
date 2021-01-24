@@ -23,7 +23,7 @@ train:
 
 defaults:
   - dataset: merged
-  - network: efficientnet-b0
+  - network: resnext50_32x4d
   - loss: bi_tempered_logistic_loss
   - optimizer: adamp
 
