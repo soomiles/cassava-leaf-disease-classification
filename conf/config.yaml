@@ -4,7 +4,7 @@ device_list: [0, 1, 2, 3]
 train:
   n_fold: 5
   n_fold_iter: 1
-  n_epochs: 15
+  n_epochs: 30
   total_epoch: 2
   do_noise: False
   noise_params:
@@ -13,10 +13,12 @@ train:
     thr_epochs: 8
   do_distillation: False
   distillation_params:
-    dir: null
+    dir: '/workspace/logs/cassava-leaf-disease-classification/2021-01-24/15-56-21'
     loss:
-      name: cross_entropy_onehot
-      args: null
+      name: label_smoothing_onehot
+      args:
+        smoothing: 0.1
+        log_softmax: True
   run_test: False
 
 defaults:

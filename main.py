@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
                                               filename="{epoch:02d}-{valid_score:.4f}",
                                               monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=cfg.train.n_epochs//5, verbose=False)
+                                            patience=cfg.train.n_epochs//3, verbose=False)
         if cfg.train.do_distillation:
             model = DistilledTrainer(cfg,
                                      teacher_dir=cfg.train.distillation_params.dir,

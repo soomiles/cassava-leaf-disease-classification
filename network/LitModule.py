@@ -120,8 +120,8 @@ class DistilledTrainer(LitTrainer):
 
         teacher_path = glob(os.path.join(teacher_dir, f'checkpoints/*fold{fold_num}*.ckpt'))[0]
         self._teacher_model = self._load_teacher_network(teacher_path)
-        self.teacher_criterion = create_loss(train_config.distillation_params.loss.name,
-                                             train_config.distillation_params.loss.args)
+        self.teacher_criterion = create_loss(train_config.train.distillation_params.loss.name,
+                                             train_config.train.distillation_params.loss.args)
 
     @auto_move_data
     def forward(self, x):
