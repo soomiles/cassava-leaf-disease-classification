@@ -3,10 +3,10 @@ device_list: [0]
 
 train:
   n_fold: 5
-  n_fold_iter: 5
+  n_fold_iter: 1
   n_epochs: 15
   total_epoch: 2
-  do_noise: True
+  do_noise: False
   noise_params:
     alpha: 0.15
     period_epoch: 2
@@ -17,8 +17,8 @@ train:
 
 defaults:
   - dataset: merged
-  - network: efficientnet-b1
-  - loss: noise_bi_tempered_logistic_loss
+  - network: efficientnet-b0
+  - loss: bi_tempered_logistic_loss
   - optimizer: adamp
 
 hydra:
