@@ -17,16 +17,20 @@ from torch.utils.data import DataLoader
 
 from dataset.transforms import get_transforms
 from losses import create_loss
+from scripts.utils import get_state_dict_from_checkpoint, freeze_top_layers
 
 
 class LitTrainer(pl.LightningModule):
-    def __init__(self, train_config):
+    def __init__(self, train_config, fold_num):
         super(LitTrainer, self).__init__()
         self.save_hyperparameters()
         self.train_config = train_config
         self.model = timm.create_model(**train_config.network)
         self.criterion = create_loss(train_config.loss.name, train_config.loss.args)
         self.evaluator = Accuracy()
+
+        if self.train_config.train.do_load_ckpt:
+            self._load_trained_weight(fold_num, **self.train_config.train.ckpt_params)
 
     @auto_move_data
     def forward(self, x):
@@ -111,10 +115,17 @@ class LitTrainer(pl.LightningModule):
             'lr_scheduler': scheduler,
         }
 
+    def _load_trained_weight(self, fold_num, log_path, do_freeze_top_layers):
+        state_dict = get_state_dict_from_checkpoint(log_path, fold_num)
+        self.model.load_state_dict(state_dict)
+        if do_freeze_top_layers:
+            self.model = freeze_top_layers(self.model, self.train_config.network.model_name)
+        self.train_config.optimizer.lr /= 5
+
 
 class DistilledTrainer(LitTrainer):
     def __init__(self, train_config, teacher_dir, fold_num):
-        super().__init__(train_config)
+        super().__init__(train_config, fold_num)
         train_config.network.num_classes = 10
         self.model = timm.create_model(**train_config.network)
 

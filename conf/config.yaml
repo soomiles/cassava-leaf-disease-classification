@@ -1,5 +1,5 @@
 seed: 42
-device_list: [3]
+device_list: [0, 1, 2, 3]
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
@@ -13,7 +13,10 @@ train:
     period_epoch: 2
     thr_epochs: 8
 
-  load_ckpt: null # '${log_dir}/2021-01-24/15-56-21'
+  do_load_ckpt: True
+  ckpt_params:
+    log_path: '${log_dir}/2021-01-24/15-56-21'
+    do_freeze_top_layers: True
 
   do_distillation: False
   distillation_params:
@@ -23,7 +26,6 @@ train:
       args:
         smoothing: 0.1
         log_softmax: True
-
   run_test: False
 
 defaults:
