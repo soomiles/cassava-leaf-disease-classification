@@ -1,35 +1,40 @@
 seed: 42
 device_list: [0, 1]
-
+log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
   n_fold_iter: 5
   n_epochs: 15
   total_epoch: 2
+
   do_noise: False
   noise_params:
     alpha: 0.15
     period_epoch: 2
     thr_epochs: 8
+
+  load_ckpt: '${log_dir}/2021-01-24/15-56-21'
+
   do_distillation: False
   distillation_params:
-    dir: '/workspace/logs/cassava-leaf-disease-classification/2021-01-24/15-56-21' # 17-42-03: 5 fold eff-b0
+    dir: '${log_dir}/2021-01-24/18-26-21'
     loss:
       name: label_smoothing_onehot
       args:
         smoothing: 0.1
         log_softmax: True
+
   run_test: False
 
 defaults:
-  - dataset: merged
+  - dataset: merged_512
   - network: resnext50_32x4d
   - loss: bi_tempered_logistic_loss
   - optimizer: adamp
 
 hydra:
   run:
-    dir: '/workspace/logs/cassava-leaf-disease-classification/${now:%Y-%m-%d}/${now:%H-%M-%S}'
+    dir: '${log_dir}/${now:%Y-%m-%d}/${now:%H-%M-%S}'
   sweep:
-    dir: '/workspace/logs/cassava-leaf-disease-classification/${now:%Y-%m-%d}/${now:%H-%M-%S}'
+    dir: '${log_dir}/${now:%Y-%m-%d}/${now:%H-%M-%S}'
     subdir: ${hydra.job.num}

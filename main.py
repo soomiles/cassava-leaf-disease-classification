@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import logging
 from omegaconf import DictConfig, OmegaConf
+from collections import OrderedDict
 import hydra
 from hydra.utils import instantiate
 
@@ -13,6 +14,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.utilities.seed import seed_everything
+from pytorch_lightning.utilities.cloud_io import load as pl_load
 from network.LitModule import LitTrainer, DistilledTrainer
 
 import warnings
@@ -26,6 +28,7 @@ def main(cfg: DictConfig) -> None:
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, cfg.device_list))
     seed_everything(cfg.seed)
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
+    logger.info(f"Current Path: {'/'.join(os.getcwd().split('/')[-2:])}")
 
     # Training
     for fold_num in range(cfg.train.n_fold_iter):
@@ -44,6 +47,12 @@ def main(cfg: DictConfig) -> None:
                                      fold_num=fold_num)
         else:
             model = LitTrainer(cfg)
+            if cfg.train.load_ckpt is not None:
+                ckpt_path = glob(os.path.join(cfg.train.load_ckpt, f'checkpoints/*fold{fold_num}*.ckpt'))[0]
+                state_dict = pl_load(ckpt_path, map_location='cpu')['state_dict']
+                state_dict = OrderedDict((k.replace('model.', '') if 'model.' in k else k, v) for k, v in
+                                                        state_dict.items())
+                model.model.load_state_dict(state_dict)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
                              logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])

@@ -1,9 +1,4 @@
-## Todo
-- [x] Knowledge Distillation class 10개 해서 해보기
-- [ ] CleanLab Notebook 작성
-- [ ] ViT, DeiT 학습
-- [ ] Label Cleaning (SELF)
-
-## Score
-
-## Survey
+## Procedure
+1. Train 384x384
+2. 384x384 -> 512x512
+3. Distiillatiaon: 512x512 -> 512x512
