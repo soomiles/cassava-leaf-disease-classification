@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 from dataset.transforms import get_transforms
 from losses import create_loss
 from scripts.utils import get_state_dict_from_checkpoint, freeze_top_layers
+from network.factory import create_model
 
 
 class LitTrainer(pl.LightningModule):
@@ -25,7 +26,7 @@ class LitTrainer(pl.LightningModule):
         super(LitTrainer, self).__init__()
         self.save_hyperparameters()
         self.train_config = train_config
-        self.model = timm.create_model(**train_config.network)
+        self.model = create_model(**train_config.network)
         self.criterion = create_loss(train_config.loss.name, train_config.loss.args)
         self.evaluator = Accuracy()
 
@@ -127,7 +128,7 @@ class DistilledTrainer(LitTrainer):
     def __init__(self, train_config, teacher_dir, fold_num):
         super().__init__(train_config, fold_num)
         train_config.network.num_classes = 10
-        self.model = timm.create_model(**train_config.network)
+        self.model = create_model(**train_config.network)
 
         teacher_path = glob(os.path.join(teacher_dir, f'checkpoints/*fold{fold_num}*.ckpt'))[0]
         self._teacher_model = self._load_teacher_network(teacher_path)
