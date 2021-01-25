@@ -1,5 +1,5 @@
 seed: 42
-device_list: [0, 1, 2, 3]
+device_list: [0, 1]
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
@@ -15,7 +15,7 @@ train:
 
   do_load_ckpt: True
   ckpt_params:
-    log_path: '${log_dir}/2021-01-24/15-56-21'
+    log_path: '${log_dir}/2021-01-25/06-08-41'
     do_freeze_top_layers: True
 
   do_distillation: False
@@ -30,7 +30,7 @@ train:
 
 defaults:
   - dataset: merged_512
-  - network: efficientnet-b0
+  - network: efficientnet-b4
   - loss: bi_tempered_logistic_loss
   - optimizer: adamp
 
