@@ -197,7 +197,6 @@ class DistilledTrainer(LitTrainer):
         teacher_cfg.network.pretrained = False
 
         _teacher_model = timm.create_model(**teacher_cfg.network)
-        _teacher_model = timm.create_model(**teacher_cfg.network)
         _teacher_model.load_state_dict(OrderedDict((k.replace('model.', '') if 'model.' in k else k, v) for k, v in
                                                         pl_load(path, map_location='cpu')['state_dict'].items()))
         _teacher_model.eval()
