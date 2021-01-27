@@ -2,10 +2,10 @@
 #batch_size: 32 # (288, 384) 11GB
 
 #batch_size: 92 # (288, 384) 24GB
-#batch_size: 64 # (384, 384) 24GB
+batch_size: 64 # (384, 384) 24GB
 #batch_size: 32 # (512, 512) 24GB
 #batch_size: 30 # (480, 640) 24GB
-batch_size: 320 # (384, 384) -> (512, 512) 24GB
+#batch_size: 320 # (384, 384) -> (512, 512) 24GB
 
 network:
   model_name: 'resnext50_32x4d'

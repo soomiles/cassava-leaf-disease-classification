@@ -41,8 +41,7 @@ def main(cfg: DictConfig) -> None:
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
                                             patience=cfg.train.n_epochs//3, verbose=False)
         if cfg.train.do_distillation:
-            model = DistilledTrainer(cfg, fold_num=fold_num,
-                                     teacher_dir=cfg.train.distillation_params.dir)
+            model = DistilledTrainer(cfg, fold_num=fold_num)
         else:
             model = LitTrainer(cfg, fold_num=fold_num)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,

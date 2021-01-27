@@ -36,7 +36,10 @@ class LitTrainer(pl.LightningModule):
     @auto_move_data
     def forward(self, x):
         x = self.model(x)
-        return x
+        if x.shape[1] > 5:
+            return (x[:, :5] + x[:, 5:])/2
+        else:
+            return x
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -117,7 +120,10 @@ class LitTrainer(pl.LightningModule):
         }
 
     def _load_trained_weight(self, fold_num, log_path, do_freeze_top_layers):
-        state_dict = get_state_dict_from_checkpoint(log_path, fold_num)
+        state_dict, did_distillation = get_state_dict_from_checkpoint(log_path, fold_num)
+        if did_distillation:
+            self.train_config.network.num_classes = 10
+            self.model = create_model(**self.train_config.network)
         self.model.load_state_dict(state_dict)
         if do_freeze_top_layers:
             self.model = freeze_top_layers(self.model, self.train_config.network.model_name)
@@ -125,13 +131,12 @@ class LitTrainer(pl.LightningModule):
 
 
 class DistilledTrainer(LitTrainer):
-    def __init__(self, train_config, teacher_dir, fold_num):
+    def __init__(self, train_config, fold_num):
         super().__init__(train_config, fold_num)
         train_config.network.num_classes = 10
         self.model = create_model(**train_config.network)
 
-        teacher_path = glob(os.path.join(teacher_dir, f'checkpoints/*fold{fold_num}*.ckpt'))[0]
-        self._teacher_model = self._load_teacher_network(teacher_path)
+        self._teacher_model = self._load_teacher_network(train_config.train.distillation_params, fold_num)
         self.teacher_criterion = create_loss(train_config.train.distillation_params.loss.name,
                                              train_config.train.distillation_params.loss.args)
 
@@ -144,6 +149,7 @@ class DistilledTrainer(LitTrainer):
         x, y = batch
         with torch.no_grad():
             y_teacher = F.softmax(self._teacher_model(x), dim=-1)
+            if y_teacher.shape[1] > 5: y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:])/2
         y_hat1, y_hat2 = self(x)
         train_loss1 = self.criterion(y_hat1, y)
         train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
@@ -191,14 +197,15 @@ class DistilledTrainer(LitTrainer):
         out = (score + score2 + score3) / 3.0
         return {"pred": out}
 
-    def _load_teacher_network(self, path):
-        cfg_path = f"{'/'.join(path.split('/')[:-2])}/.hydra/config.yaml"
-        teacher_cfg = OmegaConf.load(cfg_path)
-        teacher_cfg.network.pretrained = False
+    def _load_teacher_network(self, distillation_params, fold_num):
+        state_dict, did_distillation = get_state_dict_from_checkpoint(distillation_params.dir, fold_num)
 
-        _teacher_model = timm.create_model(**teacher_cfg.network)
-        _teacher_model.load_state_dict(OrderedDict((k.replace('model.', '') if 'model.' in k else k, v) for k, v in
-                                                        pl_load(path, map_location='cpu')['state_dict'].items()))
+        num_classes = 10 if did_distillation else 5
+        _teacher_model = timm.create_model(model_name=distillation_params.model_name,
+                                           pretrained=False,
+                                           num_classes=num_classes,
+                                           in_chans=3)
+        _teacher_model.load_state_dict(state_dict)
         _teacher_model.eval()
         for param in _teacher_model.parameters():
             param.requires_grad = False
