@@ -135,6 +135,8 @@ class DistilledTrainer(LitTrainer):
         super().__init__(train_config, fold_num)
         train_config.network.num_classes = 10
         self.model = create_model(**train_config.network)
+        if self.train_config.train.do_load_ckpt:
+            self._load_trained_weight(fold_num, **self.train_config.train.ckpt_params)
 
         self._teacher_model = self._load_teacher_network(train_config.train.distillation_params, fold_num)
         self.teacher_criterion = create_loss(train_config.train.distillation_params.loss.name,

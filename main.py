@@ -51,7 +51,7 @@ def main(cfg: DictConfig) -> None:
         data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
-                             logger=tb_logger, callbacks=[early_stop_callback])
+                             logger=tb_logger, callbacks=callbacks)
         trainer.fit(model, data)
 
         if cfg.train.last_epochs != 0:
