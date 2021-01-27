@@ -1,8 +1,30 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 import timm
+
+
+class CustomDeiT(nn.Module):
+    def __init__(self, model_name, num_classes, pretrained=False):
+        super().__init__()
+        self.model = torch.hub.load('facebookresearch/deit:main', model_name, pretrained=pretrained)
+        n_features = self.model.head.in_features
+        self.model.head = nn.Linear(n_features, num_classes)
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+
+class CustomViT(nn.Module):
+    def __init__(self, model_name, num_classes, pretrained=False):
+        super().__init__()
+        self.model = timm.create_model(model_name, pretrained=pretrained)
+        n_features = self.model.head.in_features
+        self.model.head = nn.Linear(n_features, num_classes)
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
 
 
 def create_model(model_name: str,
@@ -10,10 +32,9 @@ def create_model(model_name: str,
                  num_classes: int,
                  in_chans: int):
     if 'deit' in model_name:
-        assert timm.__version__ == "0.3.2"
-        model = torch.hub.load('facebookresearch/deit:main', model_name, pretrained=pretrained)
-        n_features = model.head.in_features
-        model.head = nn.Linear(n_features, num_classes)
+        model = CustomDeiT(model_name, num_classes, pretrained)
+    elif 'vit' in model_name:
+        model = CustomViT(model_name, num_classes, pretrained)
     else:
         model = timm.create_model(model_name=model_name,
                                   pretrained=pretrained,

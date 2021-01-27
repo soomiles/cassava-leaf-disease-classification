@@ -1,8 +1,0 @@
-# @package _global_
-batch_size: 11 # (384, 384) 11GB
-
-network:
-  model_name: 'deit_base_patch16_384'
-  pretrained: True
-  num_classes: 5
-  in_chans: 3

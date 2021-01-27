@@ -4,7 +4,7 @@ log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
   n_fold_iter: 1
-  n_epochs: 60
+  n_epochs: 20
   last_epochs: 3
   total_epoch: 2
 
@@ -32,9 +32,9 @@ train:
 
 defaults:
   - dataset: merged
-  - network: efficientnet-b0
+  - network: vit_base_patch16_384
   - loss: bi_tempered_logistic_loss
-  - optimizer: adam
+  - optimizer: adamp
 
 hydra:
   run:

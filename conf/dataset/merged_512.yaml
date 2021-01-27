@@ -6,7 +6,7 @@ dataset:
   train_data_dir: '${root_dir}/train'
   val_data_dir: '${root_dir}/train'
   test_data_dir: '/workspace/dataset/cassava-leaf-disease-classification/test_images'
-  df_path: '${root_dir}/csv/train_cleanlab_v2.csv' # ['train', 'train_cleanlab_v3', 'train_filterlab_v3]
+  df_path: '${root_dir}/csv/train_filterlab_v3.csv' # ['train', 'train_cleanlab_v3', 'train_filterlab_v3]
   submit_df_path: '/workspace/dataset/cassava-leaf-disease-classification/sample_submission.csv'
 
   train_dataset_conf:
