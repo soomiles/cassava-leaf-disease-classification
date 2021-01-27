@@ -31,8 +31,6 @@ def main(cfg: DictConfig) -> None:
 
     # Training
     for fold_num in range(cfg.train.n_fold_iter):
-        data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
-
         tb_logger = TensorBoardLogger(save_dir=os.getcwd(),
                                       version=f'fold{fold_num}')
         checkpoint_callback = ModelCheckpoint(dirpath=tb_logger.log_dir,
@@ -44,10 +42,23 @@ def main(cfg: DictConfig) -> None:
             model = DistilledTrainer(cfg, fold_num=fold_num)
         else:
             model = LitTrainer(cfg, fold_num=fold_num)
+
+        if cfg.train.last_epochs == 0:
+            callbacks = [checkpoint_callback, early_stop_callback]
+        else:
+            callbacks = [early_stop_callback]
+
+        data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
         trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
-                             logger=tb_logger, callbacks=[early_stop_callback, checkpoint_callback])
+                             logger=tb_logger, callbacks=[early_stop_callback])
         trainer.fit(model, data)
+
+        if cfg.train.last_epochs != 0:
+            data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold, finetune=True)
+            trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.last_epochs,
+                                 progress_bar_refresh_rate=1, callbacks=[checkpoint_callback])
+            trainer.fit(model, data)
 
         if cfg.train.do_noise:
             pd.DataFrame({'image_id': data.train.df.image_id.values,

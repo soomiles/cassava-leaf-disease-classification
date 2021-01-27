@@ -3,8 +3,9 @@ device_list: [0, 1, 2, 3]
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
-  n_fold_iter: 5
-  n_epochs: 20
+  n_fold_iter: 1
+  n_epochs: 60
+  last_epochs: 3
   total_epoch: 2
 
   do_noise: False
@@ -18,7 +19,7 @@ train:
     log_path: '${log_dir}/2021-01-26/11-14-55'
     do_freeze_top_layers: True
 
-  do_distillation: True
+  do_distillation: False
   distillation_params:
     dir: '${log_dir}/2021-01-26/15-42-00'
     loss:
@@ -31,9 +32,9 @@ train:
 
 defaults:
   - dataset: merged
-  - network: resnext50_32x4d
+  - network: efficientnet-b0
   - loss: bi_tempered_logistic_loss
-  - optimizer: adamp
+  - optimizer: adam
 
 hydra:
   run:

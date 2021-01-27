@@ -21,7 +21,7 @@ def get_transforms(need=('train', 'val'), img_size=(384, 384), crop=True):
             ToTensorV2(p=1.0),
         ], p=1.0)
     if 'val' in need:
-        new_size = tuple([int((256 / 224) * size) for size in img_size]) if crop else img_size
+        new_size = tuple([int((440 / 384) * size) for size in img_size]) if crop else img_size
         transformations['val'] = Compose([
             PadIfNeeded(min_height=512, min_width=512),
             CenterCrop(img_size[0], img_size[1]),

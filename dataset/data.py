@@ -27,6 +27,7 @@ class DataModule(pl.LightningDataModule):
         test_dataloader_conf: Optional[DictConfig] = None,
         fold_num: int = None,
         n_fold: int = None,
+        finetune: bool = False
     ):
         super().__init__()
         self.train_data_dir = train_data_dir
@@ -42,6 +43,7 @@ class DataModule(pl.LightningDataModule):
         self.test_dataloader_conf = test_dataloader_conf or OmegaConf.create()
         self.fold_num = fold_num if fold_num is not None else 0
         self.n_fold = n_fold if n_fold is not None else 5
+        self.finetune = finetune
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
@@ -54,7 +56,7 @@ class DataModule(pl.LightningDataModule):
 
             train_df = df[df.fold != self.fold_num].reset_index(drop=True)
             val_df = df[df.fold == self.fold_num].reset_index(drop=True)
-            self.train = CassavaDataset(self.train_data_dir, train_df, train=True,
+            self.train = CassavaDataset(self.train_data_dir, train_df, train=(not self.finetune),
                                         **self.train_dataset_conf)
             self.val = CassavaDataset(self.val_data_dir, val_df, train=False,
                                       **self.val_dataset_conf)
