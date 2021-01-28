@@ -1,5 +1,5 @@
 seed: 42
-device_list: [2, 3]
+device_list: [0, 1]
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
@@ -14,7 +14,7 @@ train:
     period_epoch: 2
     thr_epochs: 8
 
-  do_load_ckpt: True
+  do_load_ckpt: False
   ckpt_params:
     log_path: '${log_dir}/2021-01-28/09-46-26'
     do_freeze_top_layers: False
@@ -31,10 +31,10 @@ train:
   run_test: False
 
 defaults:
-  - dataset: merged_512
+  - dataset: merged
   - network: efficientnet-b0 # 'vit_base_patch16_384' 'efficientnet-b4' 'resnest50d_1s4x24d'
   - loss: bi_tempered_logistic_loss
-  - optimizer: adamp
+  - optimizer: adamw
 
 hydra:
   run:
