@@ -6,11 +6,11 @@ dataset:
   train_data_dir: '${root_dir}/train'
   val_data_dir: '${root_dir}/train'
   test_data_dir: '/workspace/dataset/cassava-leaf-disease-classification/test_images'
-  df_path: '${root_dir}/csv/train_filterlab_v3.csv' # ['train', 'train_cleanlab_v3', 'train_filterlab_v3]
+  df_path: '${root_dir}/csv/train_filterlab_v3.csv' # ['train', 'train_label_v2', 'train_pred_v2', 'train_pseudo_v2', 'train_cleanlab_v2']
   submit_df_path: '/workspace/dataset/cassava-leaf-disease-classification/sample_submission.csv'
 
   train_dataset_conf:
-    img_size: (512, 512) # (384, 384) or (512, 512)
+    img_size: (384, 384) # (384, 384) or (512, 512)
     output_label: True
     one_hot_label: True
     do_fmix: False
@@ -20,12 +20,12 @@ dataset:
       shape: null
       max_soft: True
       reformulate: False
-    do_cutmix: False
+    do_cutmix: True
     cutmix_params:
       alpha: 1.
 
   val_dataset_conf:
-    img_size: (512, 512)
+    img_size: (384, 384)
     output_label: True
     one_hot_label: True
     do_fmix: False
@@ -40,7 +40,7 @@ dataset:
       alpha: 1.
 
   test_dataset_conf:
-    img_size: (512, 512)
+    img_size: (384, 384)
     output_label: False
     one_hot_label: False
     do_fmix: False

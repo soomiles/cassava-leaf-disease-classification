@@ -4,9 +4,9 @@ log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
   use_fold: [0] # [0, 1, 2, 3, 4]
-  n_epochs: 60
-  last_epochs: 0
+  n_epochs: 22
   total_epoch: 2
+  last_epochs: 3
 
   do_noise: False
   noise_params:
@@ -14,24 +14,24 @@ train:
     period_epoch: 2
     thr_epochs: 8
 
-  do_load_ckpt: False
+  do_load_ckpt: True
   ckpt_params:
     log_path: '${log_dir}/2021-01-28/09-46-26'
     do_freeze_top_layers: False
 
   do_distillation: False
   distillation_params:
-    dir: '${log_dir}/2021-01-27/05-52-55'
+    dir: '${log_dir}/2021-01-28/13-54-23'
     loss:
       name: label_smoothing_onehot
       args:
-        smoothing: 0.1
+        smoothing: 0.2
         log_softmax: True
-    model_name: 'tf_efficientnet_b4_ns'
+    model_name: 'tf_efficientnet_b0_ns'
   run_test: False
 
 defaults:
-  - dataset: merged
+  - dataset: merged_512
   - network: efficientnet-b0 # 'vit_base_patch16_384' 'efficientnet-b4' 'resnest50d_1s4x24d'
   - loss: bi_tempered_logistic_loss
   - optimizer: adamw

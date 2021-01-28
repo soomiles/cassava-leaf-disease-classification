@@ -20,7 +20,7 @@ dataset:
       shape: null
       max_soft: True
       reformulate: False
-    do_cutmix: False
+    do_cutmix: True
     cutmix_params:
       alpha: 1.
 
