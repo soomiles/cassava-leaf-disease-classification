@@ -8,7 +8,8 @@ def get_state_dict_from_checkpoint(log_dir, fold_num):
     ckpt_path = glob(os.path.join(log_dir, f'checkpoints/*fold{fold_num}*.ckpt'))[0]
     state_dict = pl_load(ckpt_path, map_location='cpu')['state_dict']
     did_distillation = bool(sum(['_teacher_model' in k for k in state_dict.keys()]))
-    state_dict = OrderedDict((k.replace('model.', '') if 'model.' in k else k, v) for k, v in
+    state_dict = OrderedDict((k.replace('model.model.', 'model2.').replace('model.', '').replace('model2.', 'model.')
+                              if 'model.' in k else k, v) for k, v in
                              state_dict.items() if '_teacher_model' not in k)
     return state_dict, did_distillation
 

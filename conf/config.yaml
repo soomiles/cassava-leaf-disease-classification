@@ -14,9 +14,9 @@ train:
     period_epoch: 2
     thr_epochs: 8
 
-  do_load_ckpt: False
+  do_load_ckpt: True
   ckpt_params:
-    log_path: '${log_dir}/2021-01-27/19-05-56'
+    log_path: '${log_dir}/2021-01-28/09-46-26'
     do_freeze_top_layers: False
 
   do_distillation: False
@@ -31,7 +31,7 @@ train:
   run_test: False
 
 defaults:
-  - dataset: merged
+  - dataset: merged_512
   - network: efficientnet-b0 # 'vit_base_patch16_384' 'efficientnet-b4' 'resnest50d_1s4x24d'
   - loss: bi_tempered_logistic_loss
   - optimizer: adamp
