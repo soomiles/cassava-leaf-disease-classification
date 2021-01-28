@@ -1,10 +1,10 @@
 seed: 42
-device_list: [0, 1, 2, 3]
+device_list: [2, 3]
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
-  n_fold_iter: 5
-  n_epochs: 20
+  use_fold: [0] # [0, 1, 2, 3, 4]
+  n_epochs: 60
   last_epochs: 0
   total_epoch: 2
 
@@ -16,8 +16,8 @@ train:
 
   do_load_ckpt: False
   ckpt_params:
-    log_path: '${log_dir}/2021-01-27/05-52-55'
-    do_freeze_top_layers: True
+    log_path: '${log_dir}/2021-01-27/19-05-56'
+    do_freeze_top_layers: False
 
   do_distillation: False
   distillation_params:
@@ -32,7 +32,7 @@ train:
 
 defaults:
   - dataset: merged
-  - network: vit_base_patch16_384 # 'vit_base_patch16_384' 'efficientnet-b4' 'resnest50d_1s4x24d'
+  - network: efficientnet-b0 # 'vit_base_patch16_384' 'efficientnet-b4' 'resnest50d_1s4x24d'
   - loss: bi_tempered_logistic_loss
   - optimizer: adamp
 

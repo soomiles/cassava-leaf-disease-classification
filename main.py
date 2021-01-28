@@ -30,7 +30,7 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Current Path: {'/'.join(os.getcwd().split('/')[-2:])}")
 
     # Training
-    for fold_num in range(cfg.train.n_fold_iter):
+    for fold_num in cfg.train.use_fold:
         tb_logger = TensorBoardLogger(save_dir=os.getcwd(),
                                       version=f'fold{fold_num}')
         checkpoint_callback = ModelCheckpoint(dirpath=tb_logger.log_dir,
