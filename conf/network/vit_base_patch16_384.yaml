@@ -1,7 +1,7 @@
 # @package _global_
-#batch_size: 11 # (384, 384) 11GB
+batch_size: 11 # (384, 384) 11GB
 
-batch_size: 28 # (384, 384) 24GB
+#batch_size: 28 # (384, 384) 24GB
 network:
   model_name: 'vit_base_patch16_384'
   pretrained: True

@@ -43,22 +43,13 @@ def main(cfg: DictConfig) -> None:
         else:
             model = LitTrainer(cfg, fold_num=fold_num)
 
-        if cfg.train.last_epochs == 0:
-            callbacks = [checkpoint_callback, early_stop_callback]
-        else:
-            callbacks = [early_stop_callback]
-
         data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
-        trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.n_epochs,
+        trainer = pl.Trainer(gpus=len(cfg.device_list),
+                             accumulate_grad_batches={cfg.train.total_epoch+1: 2},
+                             max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
-                             logger=tb_logger, callbacks=callbacks)
+                             logger=tb_logger, callbacks=[checkpoint_callback, early_stop_callback])
         trainer.fit(model, data)
-
-        if cfg.train.last_epochs != 0:
-            data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold, finetune=True)
-            trainer = pl.Trainer(gpus=len(cfg.device_list), max_epochs=cfg.train.last_epochs,
-                                 progress_bar_refresh_rate=1, callbacks=[checkpoint_callback])
-            trainer.fit(model, data)
 
         if cfg.train.do_noise:
             pd.DataFrame({'image_id': data.train.df.image_id.values,

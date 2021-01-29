@@ -6,7 +6,6 @@ train:
   use_fold: [0] # [0, 1, 2, 3, 4]
   n_epochs: 25
   total_epoch: 2
-  last_epochs: 0
 
   do_noise: False
   noise_params:
@@ -19,9 +18,9 @@ train:
     log_path: '${log_dir}/2021-01-28/09-46-26'
     do_freeze_top_layers: False
 
-  do_distillation: True
+  do_distillation: False
   distillation_params:
-    dir: '${log_dir}/2021-01-28/13-54-23'
+    dir: '${log_dir}/2021-01-28/13-23-00'
     loss:
       name: label_smoothing_onehot
       args:
@@ -31,10 +30,10 @@ train:
   run_test: False
 
 defaults:
-  - dataset: merged_512_cutmix
+  - dataset: merged_cutmix
   # 'deit_base_distilled_patch16_384' 'vit_base_patch16_384'
   # 'efficientnet-b4' 'resnest50d_1s4x24d'
-  - network: efficientnet-b0
+  - network: vit_base_patch16_384
   - loss: bi_tempered_logistic_loss
   - optimizer: adamw
 
