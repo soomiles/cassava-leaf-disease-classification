@@ -1,5 +1,6 @@
 # @package _global_
-batch_size: 11 # (384, 384) 11GB
+#batch_size: 11 # (384, 384) 11GB
+batch_size: 12 # (384, 384) 11GB 16 bit
 
 #batch_size: 28 # (384, 384) 24GB
 network:

@@ -1,7 +1,8 @@
 # @package _global_
 #batch_size: 11 # (384, 384) 11GB
 
-batch_size: 27 # (384, 384) 24GB
+#batch_size: 27 # (384, 384) 24GB
+batch_size: 33 # (384, 384) 24GB
 
 network:
   model_name: 'deit_base_distilled_patch16_384'

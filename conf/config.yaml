@@ -20,19 +20,19 @@ train:
 
   do_distillation: False
   distillation_params:
-    dir: '${log_dir}/2021-01-28/13-23-00'
+    dir: '${log_dir}/2021-01-27/19-09-06'
     loss:
       name: label_smoothing_onehot
       args:
         smoothing: 0.2
         log_softmax: True
-    model_name: 'tf_efficientnet_b0_ns'
+    model_name: 'vit_base_patch16_384'
   run_test: False
 
 defaults:
-  - dataset: merged_cutmix
+  - dataset: merged
   # 'deit_base_distilled_patch16_384' 'vit_base_patch16_384'
-  # 'efficientnet-b4' 'resnest50d_1s4x24d'
+  # 'efficientnet-b4' 'resnext50_32x4d'
   - network: vit_base_patch16_384
   - loss: bi_tempered_logistic_loss
   - optimizer: adamw

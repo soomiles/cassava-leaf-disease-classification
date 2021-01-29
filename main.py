@@ -28,6 +28,11 @@ def main(cfg: DictConfig) -> None:
     seed_everything(cfg.seed)
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
     logger.info(f"Current Path: {'/'.join(os.getcwd().split('/')[-2:])}")
+    if cfg.network.model_name in ['deit_base_distilled_patch16_384',
+                                  'vit_base_patch16_384',]:
+        precision = 16
+    else:
+        precision = 32
 
     # Training
     for fold_num in cfg.train.use_fold:
@@ -45,6 +50,7 @@ def main(cfg: DictConfig) -> None:
 
         data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
         trainer = pl.Trainer(gpus=len(cfg.device_list),
+                             precision=precision,
                              accumulate_grad_batches={cfg.train.total_epoch+1: 2},
                              max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
