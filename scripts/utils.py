@@ -10,7 +10,7 @@ def get_state_dict_from_checkpoint(log_dir, fold_num):
     if 'state_dict' in state_dict:
         state_dict = state_dict['state_dict']
     did_distillation = bool(sum(['_teacher_model' in k for k in state_dict.keys()]))
-    state_dict = OrderedDict((k.replace('model.', '')
+    state_dict = OrderedDict((k.replace('model.model.', 'model2.').replace('model.', '').replace('model2.', 'model.')
                               if 'model.' in k else k, v) for k, v in
                              state_dict.items() if '_teacher_model' not in k)
     # state_dict = OrderedDict((k.replace('model.model.', 'model2.').replace('model.', '').replace('model2.', 'model.')

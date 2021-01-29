@@ -208,7 +208,7 @@ class LitTester(pl.LightningModule):
         super(LitTester, self).__init__()
         if did_distillation and (network_cfg.model_name != 'deit_base_distilled_patch16_384'):
             network_cfg.num_classes = 5
-        self.model = timm.create_model(**network_cfg)
+        self.model = create_model(**network_cfg)
         self.model.load_state_dict(state_dict)
         self.model.eval()
 

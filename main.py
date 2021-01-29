@@ -33,13 +33,13 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Current Path: {'/'.join(os.getcwd().split('/')[-2:])}")
     is_multi_gpu = 'tmp_end' if len(cfg.device_list) > 1 else ''
     if cfg.network.model_name in ['deit_base_distilled_patch16_384',
-                                  'vit_base_patch16_384',]:
+                                  'deit_base_patch16_384',]:
         precision = 16
     else:
         precision = 32
 
     # Training & Inference
-    df = pd.read_csv(cfg.df_path).iloc[:100]
+    df = pd.read_csv(cfg.df_path)
     if 'fold' not in df.columns:
         skf = StratifiedKFold(n_splits=cfg.train.n_fold, shuffle=True)
         df.loc[:, 'fold'] = 0
