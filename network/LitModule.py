@@ -158,22 +158,17 @@ class DistilledTrainer(LitTrainer):
         else:
             out = x # for DeiT.eval()
 
-        if self.training:
-            return out
-        else:
-            if not isinstance(x, torch.Tensor):
-                return (out[0] + out[1]) / 2
-            else:
-                return out
+        return out
 
     def training_step(self, batch, batch_idx):
         x, y = batch
         with torch.no_grad():
-            y_teacher = F.softmax(self._teacher_model(x), dim=-1)
+            y_teacher = self._teacher_model(x)
             if not isinstance(y_teacher, torch.Tensor):
                 y_teacher = (y_teacher[0] + y_teacher[1])/2
             elif y_teacher.shape[1] > 5:
-                y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:])/2
+                y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:]) / 2
+            y_teacher = F.softmax(y_teacher, dim=-1)
         y_hat1, y_hat2 = self(x)
         train_loss1 = self.criterion(y_hat1, y)
         train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
@@ -195,6 +190,8 @@ class DistilledTrainer(LitTrainer):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
+        if not isinstance(y_hat, torch.Tensor):
+            y_hat = (y_hat[0] + y_hat[1]) / 2
         valid_loss = self.criterion(y_hat, y)
         self.log('valid_loss', valid_loss)
 
