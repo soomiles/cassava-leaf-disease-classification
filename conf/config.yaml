@@ -1,17 +1,12 @@
 seed: 42
-device_list: [2, 3]
+device_list: [0, 1]
+df_path: '${root_dir}/csv/train_filterlab_v3.csv'
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
-  use_fold: [0] # [0, 1, 2, 3, 4]
-  n_epochs: 25
+  use_fold: [0, 1] # [0, 1, 2, 3, 4]
+  n_epochs: 1
   total_epoch: 2
-
-  do_noise: False
-  noise_params:
-    alpha: 0.15
-    period_epoch: 2
-    thr_epochs: 8
 
   do_load_ckpt: False
   ckpt_params:
@@ -27,13 +22,13 @@ train:
         smoothing: 0.2
         log_softmax: True
     model_name: 'vit_base_patch16_384'
-  run_test: False
+  run_test: True
 
 defaults:
-  - dataset: merged
+  - dataset: merged_cutmix
   # 'deit_base_distilled_patch16_384' 'vit_base_patch16_384'
   # 'efficientnet-b4' 'resnext50_32x4d'
-  - network: vit_base_patch16_384
+  - network: efficientnet-b0
   - loss: bi_tempered_logistic_loss
   - optimizer: adamw
 

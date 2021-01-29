@@ -8,13 +8,16 @@ from omegaconf import DictConfig, OmegaConf
 from collections import OrderedDict
 import hydra
 from hydra.utils import instantiate
+from sklearn.model_selection import StratifiedKFold
 
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.utilities.seed import seed_everything
-from network.LitModule import LitTrainer, DistilledTrainer
+
+from network.LitModule import LitTrainer, DistilledTrainer, LitTester
+from scripts.utils import get_state_dict_from_checkpoint
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -28,13 +31,24 @@ def main(cfg: DictConfig) -> None:
     seed_everything(cfg.seed)
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
     logger.info(f"Current Path: {'/'.join(os.getcwd().split('/')[-2:])}")
+    is_multi_gpu = 'tmp_end' if len(cfg.device_list) > 1 else ''
     if cfg.network.model_name in ['deit_base_distilled_patch16_384',
                                   'vit_base_patch16_384',]:
         precision = 16
     else:
         precision = 32
 
-    # Training
+    # Training & Inference
+    df = pd.read_csv(cfg.df_path).iloc[:100]
+    if 'fold' not in df.columns:
+        skf = StratifiedKFold(n_splits=cfg.train.n_fold, shuffle=True)
+        df.loc[:, 'fold'] = 0
+        for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
+            df.loc[df.iloc[val_index].index, 'fold'] = fold_num
+
+    os.makedirs(os.path.join(os.getcwd(), 'checkpoints'), exist_ok=True)
+    scores = []
+    oof_dict = {'image_id': [], 'label': [], 'fold': []}
     for fold_num in cfg.train.use_fold:
         tb_logger = TensorBoardLogger(save_dir=os.getcwd(),
                                       version=f'fold{fold_num}')
@@ -48,7 +62,7 @@ def main(cfg: DictConfig) -> None:
         else:
             model = LitTrainer(cfg, fold_num=fold_num)
 
-        data = instantiate(cfg.dataset, fold_num=fold_num, n_fold=cfg.train.n_fold)
+        data = instantiate(cfg.dataset, df=df, fold_num=fold_num)
         trainer = pl.Trainer(gpus=len(cfg.device_list),
                              precision=precision,
                              accumulate_grad_batches={cfg.train.total_epoch+1: 2},
@@ -57,55 +71,36 @@ def main(cfg: DictConfig) -> None:
                              logger=tb_logger, callbacks=[checkpoint_callback, early_stop_callback])
         trainer.fit(model, data)
 
-        if cfg.train.do_noise:
-            pd.DataFrame({'image_id': data.train.df.image_id.values,
-                          'labels': data.train.labels_copy.tolist()}).to_csv(
-                os.path.join(os.getcwd(), f'fold{fold_num}_train_labels.csv'), index=False)
-            pd.DataFrame({'image_id': data.val.df.image_id.values,
-                          'labels': data.val.labels_copy.tolist()}).to_csv(
-                os.path.join(os.getcwd(), f'fold{fold_num}_val_labels.csv'), index=False)
-    del data, model, trainer
-    gc.collect()
-    torch.cuda.empty_cache()
-
-    # Move Checkpoints
-    os.makedirs(os.path.join(os.getcwd(), 'checkpoints'), exist_ok=True)
-    ckpt_paths, scores = [], []
-    for ckpt_path in glob(os.path.join(os.getcwd(), 'default/**/*.ckpt')):
-        if 'tmp_end' in ckpt_path:
-            continue
-        fold = os.path.basename(os.path.dirname(ckpt_path))
+        # Move Checkpoint
+        ckpt_path = glob(os.path.join(os.getcwd(),
+                                      f'default/fold{fold_num}/*{is_multi_gpu}.ckpt'))[0]
         ckpt_name = os.path.basename(ckpt_path)
         new_ckpt_path = os.path.join(os.getcwd(), 'checkpoints',
-                                     f'{"-".join(os.getcwd().split("/")[-2:])}-{fold}-{ckpt_name}')
+                                     f'{"-".join(os.getcwd().split("/")[-2:])}-fold{fold_num}-{ckpt_name}')
         os.rename(ckpt_path, new_ckpt_path)
-        ckpt_paths.append(new_ckpt_path)
-        fold_score = float(os.path.basename(new_ckpt_path).split('valid_score=')[1][:6])
-        scores.append(fold_score)
-        logger.info(f'Fold {fold} - {fold_score:.4f}')
-    logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
-    summary_df = pd.read_csv('/workspace/logs/cassava-leaf-disease-classification/summary_v1.csv')
-    summary_df = summary_df.append(pd.Series([os.path.basename(cfg.dataset.df_path)[:-4],
-                                              "/".join(os.getcwd().split("/")[-3:]),
-                                              np.mean(scores)] + scores,
-                                             index=['cv', 'path', 'score'] +
-                                                   [f'fold{i}' for i in range(len(scores))]),
-                                   ignore_index=True)
-    summary_df.to_csv('/workspace/logs/cassava-leaf-disease-classification/summary_v1.csv', index=False)
+        score = float(os.path.basename(new_ckpt_path).split('valid_score=')[1][:6])
+        scores.append(score)
+        logger.info(f'Fold {fold_num} - {score:.4f}')
+        del trainer, model
 
-    # Inference
+        # Inference Hold-out sets
+        if cfg.train.run_test:
+            state_dict, did_distillation = get_state_dict_from_checkpoint(os.getcwd(), fold_num)
+            model = LitTester(cfg.network, state_dict, did_distillation)
+            infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
+            pred = infer.test(model, datamodule=data, verbose=False)[0]
+            oof_dict['image_id'].extend(df[df.fold == fold_num].image_id.values.tolist())
+            oof_dict['label'].extend(pred['prob'].tolist())
+            oof_dict['fold'].extend([fold_num] * pred['prob'].shape[0])
+            del infer, model
+        del data
+        gc.collect()
+        torch.cuda.empty_cache()
+
+    logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
     if cfg.train.run_test:
-        sub = pd.read_csv(cfg.dataset.submit_df_path)
-        data = instantiate(cfg.dataset)
-        infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
-        preds = []
-        for path in ckpt_paths:
-            model = LitTrainer.load_from_checkpoint(path, train_config=cfg).eval()
-            pred = infer.test(model, datamodule=data)[0]
-            preds.append(pred['prob'])
-        sub['label'] = sub['label'].astype(object)
-        sub['label'] = np.mean(preds, axis=0).tolist()
-        sub.to_csv(os.path.join(os.getcwd(), 'output.csv'), index=False)
+        pd.DataFrame(oof_dict).to_csv(os.path.join(os.getcwd(), 'oof.csv'), index=False)
+
 
 if __name__ == "__main__":
     main()

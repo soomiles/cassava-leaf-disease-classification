@@ -66,6 +66,29 @@ class LitTrainer(pl.LightningModule):
         valid_score = self.evaluator(y_hat, y)
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
+    def configure_optimizers(self):
+        optimizer = create_optimizer(self.train_config.optimizer, self)
+        # optimizer = AdamW(self.parameters(), lr=self.train_config.learning_rate)
+        scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1)
+        # scheduler = StepLR(optimizer, step_size=self.train_config.train.step_size, gamma=0.5)
+        scheduler = GradualWarmupScheduler(optimizer, multiplier=1,
+                                           total_epoch=self.train_config.train.total_epoch,
+                                           after_scheduler=scheduler)
+        return {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler,
+        }
+
+    def _load_trained_weight(self, fold_num, log_path, do_freeze_top_layers):
+        state_dict, did_distillation = get_state_dict_from_checkpoint(log_path, fold_num)
+        if did_distillation:
+            self.train_config.network.num_classes = 10
+            self.model = create_model(**self.train_config.network)
+        self.model.load_state_dict(state_dict)
+        if do_freeze_top_layers:
+            self.model = freeze_top_layers(self.model, self.train_config.network.model_name)
+        self.train_config.optimizer.lr /= 5
+    '''
     def validation_epoch_end(self, outputs):
         if self.train_config.train.do_noise and \
                 (self.current_epoch + 1) % self.train_config.train.noise_params.period_epoch == 0:
@@ -94,42 +117,7 @@ class LitTrainer(pl.LightningModule):
         if self.current_epoch >= self.train_config.train.noise_params.thr_epochs:
             self.train_dataloader().dataset.labels = self.train_dataloader().dataset.labels_copy.copy()
             # self.val_dataloader().dataset.labels = self.val_dataloader().dataset.labels_copy.copy()
-
-    def test_step(self, batch, batch_idx):
-        score = torch.nn.functional.softmax(self(batch), dim=1)
-        score2 = torch.nn.functional.softmax(self(torch.flip(batch, [-1])), dim=1)
-        score3 = torch.nn.functional.softmax(self(torch.flip(batch, [-2])), dim=1)
-
-        out = (score + score2 + score3) / 3.0
-        return {"pred": out}
-
-    def test_epoch_end(self, output_results):
-        all_outputs = torch.cat([out["pred"] for out in output_results], dim=0)
-        all_outputs = all_outputs.cpu().numpy()
-        return {'prob': all_outputs}
-
-    def configure_optimizers(self):
-        optimizer = create_optimizer(self.train_config.optimizer, self)
-        # optimizer = AdamW(self.parameters(), lr=self.train_config.learning_rate)
-        scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1)
-        # scheduler = StepLR(optimizer, step_size=self.train_config.train.step_size, gamma=0.5)
-        scheduler = GradualWarmupScheduler(optimizer, multiplier=1,
-                                           total_epoch=self.train_config.train.total_epoch,
-                                           after_scheduler=scheduler)
-        return {
-            'optimizer': optimizer,
-            'lr_scheduler': scheduler,
-        }
-
-    def _load_trained_weight(self, fold_num, log_path, do_freeze_top_layers):
-        state_dict, did_distillation = get_state_dict_from_checkpoint(log_path, fold_num)
-        if did_distillation:
-            self.train_config.network.num_classes = 10
-            self.model = create_model(**self.train_config.network)
-        self.model.load_state_dict(state_dict)
-        if do_freeze_top_layers:
-            self.model = freeze_top_layers(self.model, self.train_config.network.model_name)
-        self.train_config.optimizer.lr /= 5
+    '''
 
 
 class DistilledTrainer(LitTrainer):
@@ -200,19 +188,6 @@ class DistilledTrainer(LitTrainer):
         valid_score = self.evaluator(y_hat, y)
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
-    def test_micro_step(self, batch):
-        y_hat1, y_hat2 = self(batch)
-        y_hat = (y_hat1 + y_hat2) / 2
-        return y_hat
-
-    def test_step(self, batch, batch_idx):
-        score = torch.nn.functional.softmax(self.test_micro_step(batch), dim=1)
-        score2 = torch.nn.functional.softmax(self.test_micro_step(torch.flip(batch, [-1])), dim=1)
-        score3 = torch.nn.functional.softmax(self.test_micro_step(torch.flip(batch, [-2])), dim=1)
-
-        out = (score + score2 + score3) / 3.0
-        return {"pred": out}
-
     def _load_teacher_network(self, distillation_params, fold_num):
         state_dict, did_distillation = get_state_dict_from_checkpoint(distillation_params.dir, fold_num)
 
@@ -226,3 +201,39 @@ class DistilledTrainer(LitTrainer):
         for param in _teacher_model.parameters():
             param.requires_grad = False
         return _teacher_model
+
+
+class LitTester(pl.LightningModule):
+    def __init__(self, network_cfg, state_dict, did_distillation):
+        super(LitTester, self).__init__()
+        if did_distillation and (network_cfg.model_name != 'deit_base_distilled_patch16_384'):
+            network_cfg.num_classes = 5
+        self.model = timm.create_model(**network_cfg)
+        self.model.load_state_dict(state_dict)
+        self.model.eval()
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+    def test_micro_step(self, x):
+        y_hat = self(x)
+        if not isinstance(y_hat, torch.Tensor):
+            y_hat = (y_hat[0] + y_hat[1]) / 2
+        elif y_hat.shape[1] > 5:
+            y_hat = (y_hat[:5] + y_hat[5:]) / 2
+        return y_hat
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        score = torch.nn.functional.softmax(self.test_micro_step(x), dim=1)
+        score2 = torch.nn.functional.softmax(self.test_micro_step(torch.flip(x, [-1])), dim=1)
+        score3 = torch.nn.functional.softmax(self.test_micro_step(torch.flip(x, [-2])), dim=1)
+
+        out = (score + score2 + score3) / 3.0
+        return {"pred": out}
+
+    def test_epoch_end(self, output_results):
+        all_outputs = torch.cat([out["pred"] for out in output_results], dim=0)
+        all_outputs = all_outputs.cpu().numpy()
+        return {'prob': all_outputs}
