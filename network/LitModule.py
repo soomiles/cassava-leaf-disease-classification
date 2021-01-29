@@ -36,8 +36,10 @@ class LitTrainer(pl.LightningModule):
     @auto_move_data
     def forward(self, x):
         x = self.model(x)
-        if x.shape[1] > 5:
-            return (x[:, :5] + x[:, 5:])/2
+        if not isinstance(x, torch.Tensor):
+            return (x[0] + x[1]) / 2
+        elif x.shape[1] > 5:
+            return (x[:, :5] + x[:, 5:]) / 2
         else:
             return x
 
@@ -133,7 +135,10 @@ class LitTrainer(pl.LightningModule):
 class DistilledTrainer(LitTrainer):
     def __init__(self, train_config, fold_num):
         super().__init__(train_config, fold_num)
-        train_config.network.num_classes = 10
+        if train_config.network.model_name == 'deit_base_distilled_patch16_384':
+            train_config.network.num_classes = 5
+        else:
+            train_config.network.num_classes = 10
         self.model = create_model(**train_config.network)
         if self.train_config.train.do_load_ckpt:
             self._load_trained_weight(fold_num, **self.train_config.train.ckpt_params)
@@ -145,13 +150,30 @@ class DistilledTrainer(LitTrainer):
     @auto_move_data
     def forward(self, x):
         x = self.model(x)
-        return x[:, :5], x[:, 5:]
+
+        if not isinstance(x, torch.Tensor):
+            out = x[0], x[1]
+        elif x.shape[1] > 5:
+            out = x[:, :5], x[:, 5:]
+        else:
+            out = x # for DeiT.eval()
+
+        if self.training:
+            return out
+        else:
+            if not isinstance(x, torch.Tensor):
+                return (out[0] + out[1]) / 2
+            else:
+                return out
 
     def training_step(self, batch, batch_idx):
         x, y = batch
         with torch.no_grad():
             y_teacher = F.softmax(self._teacher_model(x), dim=-1)
-            if y_teacher.shape[1] > 5: y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:])/2
+            if not isinstance(y_teacher, torch.Tensor):
+                y_teacher = (y_teacher[0] + y_teacher[1])/2
+            elif y_teacher.shape[1] > 5:
+                y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:])/2
         y_hat1, y_hat2 = self(x)
         train_loss1 = self.criterion(y_hat1, y)
         train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
@@ -172,18 +194,13 @@ class DistilledTrainer(LitTrainer):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_hat1, y_hat2 = self(x)
-        y_hat = (y_hat1 + y_hat2) / 2
+        y_hat = self(x)
         valid_loss = self.criterion(y_hat, y)
         self.log('valid_loss', valid_loss)
 
         y = y.argmax(dim=1) if len(y.shape) > 1 else y
-        y_hat1, y_hat2, y_hat = y_hat1.argmax(dim=1), y_hat2.argmax(dim=1), y_hat.argmax(dim=1)
-        valid_score1 = self.evaluator(y_hat1, y)
-        valid_score2 = self.evaluator(y_hat2, y)
+        y_hat = y_hat.argmax(dim=1)
         valid_score = self.evaluator(y_hat, y)
-        self.log('valid_score1', valid_score1, on_epoch=True)
-        self.log('valid_score2', valid_score2, on_epoch=True)
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
     def test_micro_step(self, batch):

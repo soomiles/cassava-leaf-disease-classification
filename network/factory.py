@@ -9,6 +9,9 @@ class CustomDeiT(nn.Module):
         self.model = torch.hub.load('facebookresearch/deit:main', model_name, pretrained=pretrained)
         n_features = self.model.head.in_features
         self.model.head = nn.Linear(n_features, num_classes)
+        if hasattr(self.model, 'head_dist'):
+            n_features = self.model.head_dist.in_features
+            self.model.head_dist = nn.Linear(n_features, num_classes)
 
     def forward(self, x):
         x = self.model(x)
