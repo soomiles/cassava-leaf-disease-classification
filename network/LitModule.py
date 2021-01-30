@@ -1,7 +1,3 @@
-import os
-from glob import glob
-from omegaconf import OmegaConf
-from collections import OrderedDict
 import torch
 import torch.nn.functional as F
 from timm.optim import create_optimizer
@@ -11,11 +7,6 @@ from warmup_scheduler import GradualWarmupScheduler
 import pytorch_lightning as pl
 from pytorch_lightning.core.decorators import auto_move_data
 from pytorch_lightning.metrics import Accuracy
-from pytorch_lightning.utilities.cloud_io import load as pl_load
-import timm
-from torch.utils.data import DataLoader
-
-from dataset.transforms import get_transforms
 from losses import create_loss
 from scripts.utils import get_state_dict_from_checkpoint, freeze_top_layers
 from network.factory import create_model
@@ -80,10 +71,11 @@ class LitTrainer(pl.LightningModule):
         }
 
     def _load_trained_weight(self, fold_num, log_path, do_freeze_top_layers):
-        state_dict, did_distillation = get_state_dict_from_checkpoint(log_path, fold_num)
-        if did_distillation:
-            self.train_config.network.num_classes = 10
-            self.model = create_model(**self.train_config.network)
+        state_dict, num_classes = get_state_dict_from_checkpoint(log_path, fold_num,
+                                                                 self.train_config.network.model_name)
+
+        self.train_config.network.num_classes = num_classes
+        self.model = create_model(**self.train_config.network)
         self.model.load_state_dict(state_dict)
         if do_freeze_top_layers:
             self.model = freeze_top_layers(self.model, self.train_config.network.model_name)
@@ -189,13 +181,13 @@ class DistilledTrainer(LitTrainer):
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
     def _load_teacher_network(self, distillation_params, fold_num):
-        state_dict, did_distillation = get_state_dict_from_checkpoint(distillation_params.dir, fold_num)
+        state_dict, num_classes = get_state_dict_from_checkpoint(distillation_params.dir, fold_num,
+                                                                 distillation_params.model_name)
 
-        num_classes = 10 if did_distillation else 5
-        _teacher_model = timm.create_model(model_name=distillation_params.model_name,
-                                           pretrained=False,
-                                           num_classes=num_classes,
-                                           in_chans=3)
+        _teacher_model = create_model(model_name=distillation_params.model_name,
+                                      pretrained=False,
+                                      num_classes=num_classes,
+                                      in_chans=3)
         _teacher_model.load_state_dict(state_dict)
         _teacher_model.eval()
         for param in _teacher_model.parameters():
