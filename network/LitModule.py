@@ -213,7 +213,7 @@ class LitTester(pl.LightningModule):
         if not isinstance(y_hat, torch.Tensor):
             y_hat = (y_hat[0] + y_hat[1]) / 2
         elif y_hat.shape[1] > 5:
-            y_hat = (y_hat[:5] + y_hat[5:]) / 2
+            y_hat = (y_hat[:, 5] + y_hat[:, 5:]) / 2
         return y_hat
 
     def test_step(self, batch, batch_idx):
