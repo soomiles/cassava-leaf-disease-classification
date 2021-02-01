@@ -115,7 +115,10 @@ class LitTrainer(pl.LightningModule):
 class DistilledTrainer(LitTrainer):
     def __init__(self, train_config, fold_num):
         super().__init__(train_config, fold_num)
-        if train_config.network.model_name == 'deit_base_distilled_patch16_384':
+        self.only_distillation = train_config.train.distillation_params.only_distillation
+        if (train_config.network.model_name == 'deit_base_distilled_patch16_384') or \
+                (self.only_distillation == True):
+            # Todo: only distillation
             train_config.network.num_classes = 5
         else:
             train_config.network.num_classes = 10
