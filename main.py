@@ -32,11 +32,6 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Training with the following config:\n{OmegaConf.to_yaml(cfg)}")
     logger.info(f"Current Path: {'/'.join(os.getcwd().split('/')[-2:])}")
     is_multi_gpu = 'tmp_end' if len(cfg.device_list) > 1 else ''
-    if cfg.network.model_name in ['deit_base_distilled_patch16_384',
-                                  'deit_base_patch16_384',]:
-        precision = 16
-    else:
-        precision = 32
 
     # Training & Inference
     df = pd.read_csv(cfg.df_path)
@@ -64,7 +59,6 @@ def main(cfg: DictConfig) -> None:
 
         data = instantiate(cfg.dataset, df=df, fold_num=fold_num)
         trainer = pl.Trainer(gpus=len(cfg.device_list),
-                             precision=precision,
                              accumulate_grad_batches={cfg.train.total_epoch+1: 2},
                              max_epochs=cfg.train.n_epochs,
                              progress_bar_refresh_rate=1,
