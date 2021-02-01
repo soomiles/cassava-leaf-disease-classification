@@ -85,8 +85,10 @@ def main(cfg: DictConfig) -> None:
 
         # Inference Hold-out sets
         if cfg.train.run_test:
-            state_dict, did_distillation = get_state_dict_from_checkpoint(os.getcwd(), fold_num)
-            model = LitTester(cfg.network, state_dict, did_distillation)
+            state_dict, num_classes = get_state_dict_from_checkpoint(os.getcwd(), fold_num,
+                                                                     cfg.network.model_name)
+            cfg.network.num_classes = num_classes
+            model = LitTester(cfg.network, state_dict)
             infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
             pred = infer.test(model, datamodule=data, verbose=False)[0]
             oof_dict['image_id'].extend(df[df.fold == fold_num].image_id.values.tolist())
