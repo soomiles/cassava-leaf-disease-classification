@@ -4,19 +4,15 @@ from collections import OrderedDict
 from pytorch_lightning.utilities.cloud_io import load as pl_load
 
 
-def get_state_dict_from_checkpoint(log_dir, fold_num, model_name):
+def get_state_dict_from_checkpoint(log_dir, fold_num):
     ckpt_path = glob(os.path.join(log_dir, f'checkpoints/*fold{fold_num}*.ckpt'))[0]
     state_dict = pl_load(ckpt_path, map_location='cpu')
     if 'state_dict' in state_dict:
         state_dict = state_dict['state_dict']
-    did_distillation = bool(sum(['_teacher_model' in k for k in state_dict.keys()]))
     state_dict = OrderedDict((k.replace('model.model.', 'model2.').replace('model.', '').replace('model2.', 'model.')
                               if 'model.' in k else k, v) for k, v in
                              state_dict.items() if '_teacher_model' not in k)
-    num_classes = 5
-    if did_distillation and (model_name != 'deit_base_distilled_patch16_384'):
-        num_classes = 10
-    return state_dict, num_classes
+    return state_dict
 
 def freeze_top_layers(model, model_name):
     if 'efficientnet' in model_name:

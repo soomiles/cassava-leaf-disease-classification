@@ -35,7 +35,7 @@ def main(cfg: DictConfig) -> None:
 
     # Training & Inference
     df = pd.read_csv(cfg.df_path)
-    if 'fold' not in df.columns:
+    if (cfg.seed != 42) or 'fold' not in df.columns:
         skf = StratifiedKFold(n_splits=cfg.train.n_fold, shuffle=True)
         df.loc[:, 'fold'] = 0
         for fold_num, (train_index, val_index) in enumerate(skf.split(X=df.index, y=df.label.values)):
@@ -79,9 +79,7 @@ def main(cfg: DictConfig) -> None:
 
         # Inference Hold-out sets
         if cfg.train.run_test:
-            state_dict, num_classes = get_state_dict_from_checkpoint(os.getcwd(), fold_num,
-                                                                     cfg.network.model_name)
-            cfg.network.num_classes = num_classes
+            state_dict = get_state_dict_from_checkpoint(os.getcwd(), fold_num)
             model = LitTester(cfg.network, state_dict)
             infer = pl.Trainer(gpus=len(cfg.device_list), accelerator='dp')
             pred = infer.test(model, datamodule=data, verbose=False)[0]

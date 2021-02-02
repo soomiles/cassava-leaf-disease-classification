@@ -29,8 +29,6 @@ class LitTrainer(pl.LightningModule):
         x = self.model(x)
         if not isinstance(x, torch.Tensor):
             return (x[0] + x[1]) / 2
-        elif x.shape[1] > 5:
-            return (x[:, :5] + x[:, 5:]) / 2
         else:
             return x
 
@@ -71,56 +69,18 @@ class LitTrainer(pl.LightningModule):
         }
 
     def _load_trained_weight(self, fold_num, log_path, do_freeze_top_layers):
-        state_dict, num_classes = get_state_dict_from_checkpoint(log_path, fold_num,
-                                                                 self.train_config.network.model_name)
+        state_dict = get_state_dict_from_checkpoint(log_path, fold_num)
 
-        self.train_config.network.num_classes = num_classes
         self.model = create_model(**self.train_config.network)
         self.model.load_state_dict(state_dict)
         if do_freeze_top_layers:
             self.model = freeze_top_layers(self.model, self.train_config.network.model_name)
         self.train_config.optimizer.lr /= 5
-    '''
-    def validation_epoch_end(self, outputs):
-        if self.train_config.train.do_noise and \
-                (self.current_epoch + 1) % self.train_config.train.noise_params.period_epoch == 0:
-            self.ensemble_prediction()
-
-    def ensemble_prediction(self):
-        transforms = get_transforms(img_size=(self.val_dataloader().dataset.h,
-                                              self.val_dataloader().dataset.w))
-        batch_size = self.train_config.batch_size
-
-        self.train_dataloader().dataset.transforms = transforms['val']
-        for ds in [self.train_dataloader().dataset, self.val_dataloader().dataset]:
-            dl = DataLoader(ds, **self.train_config.dataset.val_dataloader_conf)
-            for index, batch in enumerate(dl):
-                dl_idx = index * batch_size
-                x, y = batch
-                with torch.no_grad():
-                    y_hat = torch.nn.functional.softmax(self(x), dim=1).cpu()
-                y_hat = torch.nn.functional.softmax(
-                    self.train_config.train.noise_params.alpha * y_hat + torch.from_numpy(
-                        (1 - self.train_config.train.noise_params.alpha) * ds.labels_copy[dl_idx: dl_idx + batch_size]),
-                    dim=1)
-                ds.labels_copy[dl_idx: dl_idx+batch_size] = y_hat.numpy()
-        self.train_dataloader().dataset.transforms = transforms['train']
-
-        if self.current_epoch >= self.train_config.train.noise_params.thr_epochs:
-            self.train_dataloader().dataset.labels = self.train_dataloader().dataset.labels_copy.copy()
-            # self.val_dataloader().dataset.labels = self.val_dataloader().dataset.labels_copy.copy()
-    '''
 
 
 class DistilledTrainer(LitTrainer):
     def __init__(self, train_config, fold_num):
         super().__init__(train_config, fold_num)
-        self.only_distillation = train_config.train.distillation_params.only_distillation
-        if (train_config.network.model_name == 'deit_base_distilled_patch16_384') or \
-                (self.only_distillation == True):
-            train_config.network.num_classes = 5
-        else:
-            train_config.network.num_classes = 10
         self.model = create_model(**train_config.network)
         if self.train_config.train.do_load_ckpt:
             self._load_trained_weight(fold_num, **self.train_config.train.ckpt_params)
@@ -135,8 +95,6 @@ class DistilledTrainer(LitTrainer):
 
         if not isinstance(x, torch.Tensor):
             out = x[0], x[1]
-        elif x.shape[1] > 5:
-            out = x[:, :5], x[:, 5:]
         else:
             out = x # for DeiT.eval()
 
@@ -151,24 +109,16 @@ class DistilledTrainer(LitTrainer):
             elif y_teacher.shape[1] > 5:
                 y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:]) / 2
             y_teacher = F.softmax(y_teacher, dim=-1)
-        if self.only_distillation:
-            y_hat = self(x)
-            loss = self.teacher_criterion(y_hat, y_teacher)
-        else:
+
+        y_hat = self(x)
+        if not isinstance(x, torch.Tensor):
             y_hat1, y_hat2 = self(x)
             train_loss1 = self.criterion(y_hat1, y)
             train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
             loss = (train_loss1 + train_loss2) / 2
-            y_hat = (y_hat1 + y_hat2) / 2
-        self.log('train_loss', loss)
-
-        y = y.argmax(dim=1) if len(y.shape) > 1 else y
-        y_teacher = y_teacher.argmax(dim=1)
-        if self.only_distillation:
-            train_score = self.evaluator(y_hat, y_teacher)
         else:
-            train_score = self.evaluator(y_hat, y)
-        self.log('train_score', train_score)
+            loss = self.teacher_criterion(y_hat, y_teacher)
+        self.log('train_loss', loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -185,12 +135,11 @@ class DistilledTrainer(LitTrainer):
         self.log('valid_score', valid_score, on_epoch=True, prog_bar=True)
 
     def _load_teacher_network(self, distillation_params, fold_num):
-        state_dict, num_classes = get_state_dict_from_checkpoint(distillation_params.dir, fold_num,
-                                                                 distillation_params.model_name)
+        state_dict = get_state_dict_from_checkpoint(distillation_params.dir, fold_num)
 
         _teacher_model = create_model(model_name=distillation_params.model_name,
                                       pretrained=False,
-                                      num_classes=num_classes,
+                                      num_classes=5,
                                       in_chans=3)
         _teacher_model.load_state_dict(state_dict)
         _teacher_model.eval()
