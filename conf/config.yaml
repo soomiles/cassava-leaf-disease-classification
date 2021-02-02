@@ -1,5 +1,5 @@
 seed: 42
-device_list: [0, 1]
+device_list: [0, 1, 2, 3]
 df_path: '${root_dir}/csv/train.csv'
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
@@ -15,21 +15,21 @@ train:
 
   do_distillation: True
   distillation_params:
-    only_distillation: False
+    only_distillation: True
     dir: '${log_dir}/2021-01-28/13-23-00'
     loss:
       name: label_smoothing_onehot
       args:
-        smoothing: 0.2
+        smoothing: 0.
         log_softmax: True
     model_name: 'tf_efficientnet_b4_ns' # tf_efficientnet_b4_ns
   run_test: True
 
 defaults:
-  - dataset: merged_cutmix
+  - dataset: merged_512_fmix
   # 'deit_base_distilled_patch16_384' 'deit_base_patch16_384'
   # 'efficientnet-b4' 'resnext50_32x4d'
-  - network: deit_base_distilled_patch16_384
+  - network: efficientnet-b5
   - loss: bi_tempered_logistic_loss
   - optimizer: adamw
 

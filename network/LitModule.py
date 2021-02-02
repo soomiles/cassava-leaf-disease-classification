@@ -118,7 +118,6 @@ class DistilledTrainer(LitTrainer):
         self.only_distillation = train_config.train.distillation_params.only_distillation
         if (train_config.network.model_name == 'deit_base_distilled_patch16_384') or \
                 (self.only_distillation == True):
-            # Todo: only distillation
             train_config.network.num_classes = 5
         else:
             train_config.network.num_classes = 10
@@ -152,22 +151,24 @@ class DistilledTrainer(LitTrainer):
             elif y_teacher.shape[1] > 5:
                 y_teacher = (y_teacher[:, :5] + y_teacher[:, 5:]) / 2
             y_teacher = F.softmax(y_teacher, dim=-1)
-        y_hat1, y_hat2 = self(x)
-        train_loss1 = self.criterion(y_hat1, y)
-        train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
-        loss = (train_loss1 + train_loss2) / 2
-        self.log('train_loss1', train_loss1)
-        self.log('train_loss2', train_loss2)
+        if self.only_distillation:
+            y_hat = self(x)
+            loss = self.teacher_criterion(y_hat, y_teacher)
+        else:
+            y_hat1, y_hat2 = self(x)
+            train_loss1 = self.criterion(y_hat1, y)
+            train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
+            loss = (train_loss1 + train_loss2) / 2
+            y_hat = (y_hat1 + y_hat2) / 2
         self.log('train_loss', loss)
 
         y = y.argmax(dim=1) if len(y.shape) > 1 else y
-        y_hat1, y_hat2, y_teacher = y_hat1.argmax(dim=1), y_hat2.argmax(dim=1), y_teacher.argmax(dim=1)
-        train_score1 = self.evaluator(y_hat1, y)
-        train_score2 = self.evaluator(y_hat2, y_teacher)
-        score = (train_score1 + train_score2) / 2
-        self.log('train_score1', train_score1)
-        self.log('train_score2', train_score2)
-        self.log('train_score', score)
+        y_teacher = y_teacher.argmax(dim=1)
+        if self.only_distillation:
+            train_score = self.evaluator(y_hat, y_teacher)
+        else:
+            train_score = self.evaluator(y_hat, y)
+        self.log('train_score', train_score)
         return loss
 
     def validation_step(self, batch, batch_idx):
