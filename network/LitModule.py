@@ -111,8 +111,8 @@ class DistilledTrainer(LitTrainer):
             y_teacher = F.softmax(y_teacher, dim=-1)
 
         y_hat = self(x)
-        if not isinstance(x, torch.Tensor):
-            y_hat1, y_hat2 = self(x)
+        if not isinstance(y_hat, torch.Tensor):
+            y_hat1, y_hat2 = y_hat
             train_loss1 = self.criterion(y_hat1, y)
             train_loss2 = self.teacher_criterion(y_hat2, y_teacher)
             loss = (train_loss1 + train_loss2) / 2

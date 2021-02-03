@@ -51,7 +51,7 @@ def main(cfg: DictConfig) -> None:
                                               filename="{epoch:02d}-{valid_score:.4f}",
                                               monitor='valid_score', mode='max', verbose=False)
         early_stop_callback = EarlyStopping(monitor='valid_score', mode='max',
-                                            patience=cfg.train.n_epochs//3, verbose=False)
+                                            patience=cfg.train.n_epochs//5, verbose=False)
         if cfg.train.do_distillation:
             model = DistilledTrainer(cfg, fold_num=fold_num)
         else:
@@ -91,7 +91,7 @@ def main(cfg: DictConfig) -> None:
         gc.collect()
         torch.cuda.empty_cache()
 
-    logger.info(f'score: {np.mean(scores):.4f} ({os.getcwd()})')
+    logger.info(f"score: {np.mean(scores):.4f} ({'/'.join(os.getcwd().split('/')[-2:])})")
     if cfg.train.run_test:
         pd.DataFrame(oof_dict).to_csv(os.path.join(os.getcwd(), 'oof.csv'), index=False)
 
