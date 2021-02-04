@@ -5,7 +5,7 @@ log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
   use_fold: [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
-  n_epochs: 20
+  n_epochs: 25
   total_epoch: 2
 
   do_load_ckpt: False
@@ -27,9 +27,9 @@ train:
 defaults:
   - dataset: merged_512_cutmix
   # 'deit_base_distilled_patch16_384' 'deit_base_patch16_384'
-  # 'efficientnet-b4' 'resnext50_32x4d' 'resnest50d_1s4x24d'
-  - network: efficientnet-b4
-  - loss: bi_tempered_logistic_loss
+  # 'efficientnet-b4' 'resnext50_32x4d' 'resnest50d_1s4x24d' 'regnety_040'
+  - network: regnety_040_tmp
+  - loss: label_smoothing_onehot
   - optimizer: adamw
 
 hydra:
