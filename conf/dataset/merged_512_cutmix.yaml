@@ -12,6 +12,7 @@ dataset:
     img_size: (512, 512) # (384, 384) or (512, 512)
     output_label: True
     one_hot_label: True
+    do_randaug: False
     do_fmix: False
     fmix_params:
       alpha: 1.

@@ -1,14 +1,18 @@
 import torch
 import torch.nn.functional as F
 from timm.optim import create_optimizer
+from torch.optim.optimizer import Optimizer
 from torch.optim.lr_scheduler import *
 from warmup_scheduler import GradualWarmupScheduler
+from typing import Optional, Callable
 
 import pytorch_lightning as pl
 from pytorch_lightning.core.decorators import auto_move_data
 from pytorch_lightning.metrics import Accuracy
+
 from losses import create_loss
 from scripts.utils import get_state_dict_from_checkpoint, freeze_top_layers
+from scripts.sam import SAM
 from network.factory import create_model
 
 
@@ -57,6 +61,7 @@ class LitTrainer(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = create_optimizer(self.train_config.optimizer, self)
+        # optimizer = SAM(self.train_config.optimizer, self)
         # optimizer = AdamW(self.parameters(), lr=self.train_config.learning_rate)
         scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=1)
         # scheduler = StepLR(optimizer, step_size=self.train_config.train.step_size, gamma=0.5)

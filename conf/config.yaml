@@ -10,25 +10,25 @@ train:
 
   do_load_ckpt: False
   ckpt_params:
-    log_path: '${log_dir}/2021-01-29/14-09-48'
+    log_path: '${log_dir}/2021-01-28/13-23-00'
     do_freeze_top_layers: True
 
   do_distillation: True
   distillation_params:
-    dir: '${log_dir}/2021-02-03/20-05-04'
+    dir: '${log_dir}/2021-01-28/13-23-00'
     loss:
       name: label_smoothing_onehot
       args:
         smoothing: 0.
         log_softmax: True
-    model_name: 'deit_base_patch16_384' # tf_efficientnet_b4_ns
+    model_name: 'tf_efficientnet_b4_ns' # tf_efficientnet_b4_ns
   run_test: True
 
 defaults:
-  - dataset: merged_cutmix
+  - dataset: merged_cutmix_randaug
   # 'deit_base_distilled_patch16_384' 'deit_base_patch16_384'
   # 'efficientnet-b4' 'resnext50_32x4d' 'resnest50d_1s4x24d'
-  - network: deit_base_distilled_patch16_384
+  - network: resnext50_32x4d
   - loss: bi_tempered_logistic_loss
   - optimizer: adamw
 

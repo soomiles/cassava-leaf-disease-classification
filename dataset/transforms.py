@@ -4,9 +4,19 @@ from albumentations.pytorch import ToTensorV2
 
 mean, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
 
-def get_transforms(need=('train', 'val'), img_size=(384, 384), crop=True):
+
+def get_transforms(need=('train', 'val'), img_size=(384, 384),
+                   crop=True, do_randaug=False):
     transformations = {}
-    if 'train' in need:
+    if do_randaug and ('train' in need):
+        transformations['train'] = Compose([
+            RandomResizedCrop(img_size[0], img_size[1], p=1.0),
+            Normalize(mean=mean, std=std, max_pixel_value=255.0, p=1.0),
+            CoarseDropout(p=0.5),
+            Cutout(p=0.5),
+            ToTensorV2(p=1.0),
+        ], p=1.0)
+    elif 'train' in need:
         transformations['train'] = Compose([
             RandomResizedCrop(img_size[0], img_size[1], p=1.0),
             HorizontalFlip(p=0.5),

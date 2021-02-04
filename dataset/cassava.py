@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import pandas as pd
 import cv2
+from PIL import Image
 
 from torch.utils.data import Dataset
 from typing import Tuple, List, Optional
@@ -10,6 +11,7 @@ from ast import literal_eval
 
 from dataset.transforms import get_transforms
 from dataset.fmix import make_low_freq_image, binarise_mask
+from dataset.randaugment import RandAugment
 
 
 def get_img(path):
@@ -43,6 +45,8 @@ class CassavaDataset(Dataset):
                  img_size: str = None,
                  output_label: int = None,
                  one_hot_label: int = None,
+                 do_randaug: bool = False,
+                 randaug_params: Optional[DictConfig] = None,
                  do_fmix: int = None,
                  fmix_params: Optional[DictConfig] = None,
                  do_cutmix: int = None,
@@ -54,15 +58,23 @@ class CassavaDataset(Dataset):
         self.df = df.copy()
         img_size = literal_eval(img_size)
         self.h, self.w = img_size
+        self.do_randaug = do_randaug
+        self.randaug_params = randaug_params
         self.do_fmix = do_fmix
         self.fmix_params = fmix_params
         self.fmix_params.shape = img_size
         self.do_cutmix = do_cutmix
         self.cutmix_params = cutmix_params
 
+        if self.do_randaug:
+            self.randaug = RandAugment(**self.randaug_params)
+        else:
+            self.randaug = None
+
         if train:
             self.transforms = get_transforms(need=('train'),
-                                             img_size=img_size)['train']
+                                             img_size=img_size,
+                                             do_randaug=self.do_randaug)['train']
         else:
             self.transforms = get_transforms(need=('val'),
                                              img_size=img_size, crop=True)['val']
@@ -95,6 +107,8 @@ class CassavaDataset(Dataset):
         img = get_img("{}/{}".format(self.img_dir, self.df.loc[index]['image_id']))
 
         if self.transforms:
+            if self.do_randaug:
+                img = np.array(self.randaug(Image.fromarray(img)))
             img = self.transforms(image=img)['image']
 
         if self.do_fmix and np.random.uniform(0., 1., size=1)[0] > 0.5:
@@ -124,6 +138,8 @@ class CassavaDataset(Dataset):
                 cmix_ix = np.random.choice(self.df.index, size=1)[0]
                 cmix_img = get_img("{}/{}".format(self.img_dir, self.df.iloc[cmix_ix]['image_id']))
                 if self.transforms:
+                    if self.randaug:
+                        cmix_img = np.array(self.randaug(Image.fromarray(cmix_img)))
                     cmix_img = self.transforms(image=cmix_img)['image']
 
                 lam = np.clip(np.random.beta(self.cutmix_params['alpha'], self.cutmix_params['alpha']), 0.3, 0.4)
