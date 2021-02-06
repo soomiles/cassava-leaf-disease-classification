@@ -1,11 +1,11 @@
 # @package _global_
 #batch_size: 12 # (256, 256) 11GB
 
-batch_size: 34 # (512, 512) 24GB
+batch_size: 28 # (512, 512) 24GB
 
 
 network:
-  model_name: 'c'
+  model_name: 'regnety_064'
   pretrained: True
   num_classes: 5
   in_chans: 3

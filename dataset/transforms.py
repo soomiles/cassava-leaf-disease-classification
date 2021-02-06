@@ -8,7 +8,7 @@ mean, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
 def get_transforms(need=('train', 'val'), img_size=(384, 384),
                    crop=True, do_randaug=False):
     transformations = {}
-    new_size = tuple([int((576 / 512) * size) for size in img_size]) if crop else img_size
+    new_size = tuple([int((544 / 512) * size) for size in img_size]) if crop else img_size
     if do_randaug and ('train' in need):
         transformations['train'] = Compose([
             RandomResizedCrop(img_size[0], img_size[1], p=1.0),
