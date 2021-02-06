@@ -1,19 +1,20 @@
 seed: 42
-device_list: [0, 1, 2, 3]
+device_list: [0, 1]
 df_path: '${root_dir}/csv/train_label_v2.csv'
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
   use_fold: [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
-  n_epochs: 5
-  total_epoch: 1
+  n_epochs: 22
+  total_epoch: 2
 
-  do_load_ckpt: True
+  do_load_ckpt: False
+  finetune: True
   ckpt_params:
     log_path: '${log_dir}/2021-02-04/16-03-59'
     do_freeze_top_layers: True
 
-  do_distillation: False
+  do_distillation: True
   distillation_params:
     dir: '${log_dir}/2021-02-05/08-26-15'
     loss:
@@ -25,10 +26,10 @@ train:
   run_test: False
 
 defaults:
-  - dataset: merged_512
+  - dataset: merged_512_cutmix
   # 'deit_base_distilled_patch16_384' 'deit_base_patch16_384'
   # 'efficientnet-b4' 'resnext50_32x4d' 'resnest50d_1s4x24d' 'regnety_040'
-  - network: efficientnet-b4
+  - network: regnety_064
   - loss: label_smoothing_onehot # bi_tempered_logistic_loss
   - optimizer: adamw
 

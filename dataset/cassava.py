@@ -42,6 +42,7 @@ class CassavaDataset(Dataset):
                  img_dir: str,
                  df: pd.DataFrame,
                  train: bool,
+                 finetune: bool = False,
                  img_size: str = None,
                  output_label: int = None,
                  one_hot_label: int = None,
@@ -72,9 +73,14 @@ class CassavaDataset(Dataset):
             self.randaug = None
 
         if train:
-            self.transforms = get_transforms(need=('train'),
-                                             img_size=img_size,
-                                             do_randaug=self.do_randaug)['train']
+            if finetune:
+                self.transforms = get_transforms(need=('train'),
+                                                 img_size=img_size,
+                                                 do_randaug=self.do_randaug)['train_fine']
+            else:
+                self.transforms = get_transforms(need=('train'),
+                                                 img_size=img_size,
+                                                 do_randaug=self.do_randaug)['train']
         else:
             self.transforms = get_transforms(need=('val'),
                                              img_size=img_size, crop=True)['val']

@@ -57,7 +57,8 @@ def main(cfg: DictConfig) -> None:
         else:
             model = LitTrainer(cfg, fold_num=fold_num)
 
-        data = instantiate(cfg.dataset, df=df, fold_num=fold_num)
+        data = instantiate(cfg.dataset, df=df, fold_num=fold_num,
+                           finetune=(cfg.train.do_load_ckpt & cfg.train.finetune))
         trainer = pl.Trainer(gpus=len(cfg.device_list),
                              accumulate_grad_batches={cfg.train.total_epoch+1: 2},
                              max_epochs=cfg.train.n_epochs,
