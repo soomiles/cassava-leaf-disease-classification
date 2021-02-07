@@ -1,0 +1,11 @@
+# @package _global_
+#batch_size: 16 # (512, 512) 11GB
+
+batch_size: 36  # (512, 512) 24GB
+
+
+network:
+  model_name: 'nf_regnet_b4'
+  pretrained: True
+  num_classes: 5
+  in_chans: 3

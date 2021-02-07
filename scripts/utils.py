@@ -19,6 +19,8 @@ def freeze_top_layers(model, model_name):
         targets = ['blocks.6', 'conv_head', 'bn2', 'classifier']
     elif 'resnext50_32x4d' in model_name:
         targets = ['layer4', 'fc']
+    elif 'regnet' in model_name:
+        targets = ['s4', 'head']
     else:
         raise ValueError(f"{model_name} can't be freezed")
 

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class LabelSmoothingLoss(nn.Module):
@@ -122,3 +123,14 @@ class F1_Loss(nn.Module):
         f1 = 2 * (precision * recall) / (precision + recall + self.epsilon)
         f1 = f1.clamp(min=self.epsilon, max=1 - self.epsilon)
         return 1 - f1.mean()
+
+
+def DMI_loss(output, target, num_classes):
+    outputs = F.softmax(output, dim=1)
+    targets = target.reshape(target.size(0), 1).cpu()
+    y_onehot = torch.FloatTensor(target.size(0), num_classes).zero_()
+    y_onehot.scatter_(1, targets, 1)
+    y_onehot = y_onehot.transpose(0, 1).cuda()
+    mat = y_onehot @ outputs
+    mat = mat / target.size(0)
+    return -1.0 * torch.log(torch.abs(torch.det(mat.float())) + 0.001)

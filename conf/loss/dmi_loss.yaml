@@ -1,0 +1,4 @@
+# @package _group_
+name: dmi_loss
+args:
+  num_classes: 5
