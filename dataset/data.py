@@ -47,7 +47,6 @@ class DataModule(pl.LightningDataModule):
         train_df = self.df[self.df.fold != self.fold_num].reset_index(drop=True)
         val_df = self.df[self.df.fold == self.fold_num].reset_index(drop=True)
         if stage == "fit" or stage is None:
-            # Todo: finetuning option
             self.train = CassavaDataset(self.train_data_dir, train_df,
                                         train=True, finetune=self.finetune,
                                         **self.train_dataset_conf)

@@ -21,6 +21,10 @@ def freeze_top_layers(model, model_name):
         targets = ['layer4', 'fc']
     elif 'regnet' in model_name:
         targets = ['s4', 'head']
+    elif 'deit_base_distilled_patch16_384' in model_name:
+        targets = ['model.blocks.8.', 'model.blocks.9.',
+                   'model.blocks.10.', 'model.blocks.11.',
+                   'model.norm', 'model.pre_logits', 'model.head', 'model.head_dist']
     else:
         raise ValueError(f"{model_name} can't be freezed")
 

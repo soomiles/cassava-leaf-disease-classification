@@ -83,7 +83,7 @@ class CassavaDataset(Dataset):
                                                  do_randaug=self.do_randaug)['train']
         else:
             self.transforms = get_transforms(need=('val'),
-                                             img_size=img_size, crop=True)['val']
+                                             img_size=img_size)['val']
 
         self.output_label = output_label
         self.one_hot_label = one_hot_label

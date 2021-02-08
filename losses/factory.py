@@ -125,6 +125,7 @@ class F1_Loss(nn.Module):
         return 1 - f1.mean()
 
 
+# https://github.com/Newbeeer/L_DMI/blob/master/fashion/main.py
 def DMI_loss(output, target, num_classes):
     outputs = F.softmax(output, dim=1)
     targets = target.reshape(target.size(0), 1).cpu()

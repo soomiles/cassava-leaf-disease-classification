@@ -1,9 +1,9 @@
 # @package _global_
 #batch_size: 16 # (256, 256) 11GB
-batch_size: 72  # (512, 512) 11GB finetune
+#batch_size: 68  # (512, 512) 11GB finetune
 
 #batch_size: 36  # (512, 512) 24GB
-#batch_size:   # (512, 512) 24GB finetune
+batch_size:  200 # (512, 512) 24GB finetune
 
 
 network:
