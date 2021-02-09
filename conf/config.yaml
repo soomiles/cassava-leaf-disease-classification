@@ -1,6 +1,6 @@
 seed: 42
 device_list: [0, 1]
-df_path: ${root_dir}/csv/train_label_v3.csv
+df_path: ${root_dir}/csv/train_pseudo_v4.csv
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
