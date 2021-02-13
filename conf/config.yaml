@@ -1,6 +1,6 @@
 seed: 42
-device_list: [0, 1]
-df_path: ${root_dir}/csv/train_pseudo_v4.csv
+device_list: [0, 1, 2, 3]
+df_path: ${root_dir}/csv/train_label_v4.csv
 log_dir: '/workspace/logs/cassava-leaf-disease-classification'
 train:
   n_fold: 5
@@ -23,7 +23,7 @@ train:
         smoothing: 0.
         log_softmax: True
     model_name: 'regnety_040' # tf_efficientnet_b4_ns
-  run_test: False
+  run_test: True
 
 defaults:
   - dataset: merged_512_cutmix
@@ -31,7 +31,7 @@ defaults:
   # 'efficientnet-b4' 'resnext50_32x4d' 'resnest50d_1s4x24d' 'regnety_040'
   - network: efficientnet-b4
   # label_smoothing_onehot, bi_tempered_logistic_loss, dmi_loss
-  - loss: label_smoothing_onehot
+  - loss: bi_tempered_logistic_loss
   - optimizer: adam
 
 hydra:
