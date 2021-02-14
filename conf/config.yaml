@@ -29,7 +29,7 @@ defaults:
   - dataset: merged_512_cutmix
   # 'deit_base_distilled_patch16_384' 'deit_base_patch16_384' 'nf_regnet_b4'
   # 'efficientnet-b4' 'resnext50_32x4d' 'resnest50d_1s4x24d' 'regnety_040'
-  - network: efficientnet-b4
+  - network: regnety_040
   # label_smoothing_onehot, bi_tempered_logistic_loss, dmi_loss
   - loss: bi_tempered_logistic_loss
   - optimizer: adam
